@@ -99,6 +99,65 @@ function fetchEmails($folder = 'INBOX', $limit = 50, $start = 0)
     return $emails;
 }
 
+function searchEmails($query, $folder = 'INBOX', $limit = 50)
+{
+    $connection = imapConnect($folder);
+    if (!$connection) {
+        return [];
+    }
+    
+    $emails = [];
+    $search = imap_search($connection, 'ALL');
+    
+    if (!$search) {
+        imap_close($connection);
+        return [];
+    }
+    
+    $search = array_slice($search, 0, $limit);
+    
+    foreach ($search as $msgnum) {
+        $header = @imap_headerinfo($connection, $msgnum);
+        if (!$header) continue;
+        
+        $overview = @imap_fetch_overview($connection, $msgnum, 0);
+        
+        $from = isset($header->from[0]) ? $header->from[0] : null;
+        $senderName = $from ? (isset($from->personal) ? $from->personal : $from->mailbox) : 'Unknown';
+        $senderEmail = $from ? ($from->mailbox . '@' . $from->host) : '';
+        
+        $subject = isset($header->subject) ? imap_mime_header_decode($header->subject) : '';
+        $subject = is_array($subject) ? implode('', array_map(function ($s) {
+            return $s->text;
+        }, $subject)) : $subject;
+        
+        $date = isset($header->udate) ? $header->udate : time();
+        $read = isset($overview[0]->seen) && $overview[0]->seen == 1;
+        
+        $q = strtolower($query);
+        if (strpos(strtolower($senderName), $q) === false &&
+            strpos(strtolower($senderEmail), $q) === false &&
+            strpos(strtolower($subject), $q) === false) {
+            continue;
+        }
+        
+        $uid = @imap_msg_uid($connection, $msgnum);
+        
+        $emails[] = [
+            'uid' => $uid ?: $msgnum,
+            'msgnum' => $msgnum,
+            'from_name' => $senderName,
+            'from_email' => $senderEmail,
+            'subject' => $subject ?: '(No Subject)',
+            'date' => $date,
+            'read' => $read
+        ];
+    }
+    
+    imap_close($connection);
+    return $emails;
+}
+
 function fetchEmailByUid($uid)
 {
     $connection = imapConnect();
