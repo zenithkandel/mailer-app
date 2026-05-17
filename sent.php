@@ -52,6 +52,7 @@ function formatDate($timestamp) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sent - Mail App</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://zenithkandel.com.np/fontawesome/zenith-icons.js"></script>
 </head>
 <body>
     <div class="app-layout">
@@ -63,19 +64,19 @@ function formatDate($timestamp) {
 
             <nav class="sidebar-nav">
                 <a href="inbox.php" class="nav-item">
-                    <span class="icon">&#128229;</span>
+                    <i class="icon fa fa-inbox"></i>
                     Inbox
                 </a>
                 <a href="sent.php" class="nav-item active">
-                    <span class="icon">&#128228;</span>
+                    <i class="icon fa fa-paper-plane"></i>
                     Sent
                 </a>
                 <a href="compose.php" class="nav-item">
-                    <span class="icon">&#9993;</span>
+                    <i class="icon fa fa-pencil"></i>
                     Compose
                 </a>
                 <a href="search.php" class="nav-item">
-                    <span class="icon">&#128269;</span>
+                    <i class="icon fa fa-search"></i>
                     Search
                 </a>
             </nav>
@@ -86,57 +87,58 @@ function formatDate($timestamp) {
                     <div class="sidebar-user-email"><?php echo htmlspecialchars($_SESSION['user']); ?></div>
                 </div>
                 <a href="logout.php" class="nav-item" style="margin-top: 12px; margin-left: -20px; margin-right: -20px;">
-                    <span class="icon">&#128682;</span>
+                    <i class="icon fa fa-sign-out"></i>
                     Logout
                 </a>
             </div>
         </aside>
 
         <main class="main-content">
-            <div class="page-header">
-                <h2 class="page-title">Sent</h2>
-                <?php if ($useJsonLog): ?>
-                <div style="font-size: 12px; color: var(--text-muted);">(From local log)</div>
-                <?php endif; ?>
-            </div>
+            <div class="page-container">
+                <div class="page-header">
+                    <h2 class="page-title">Sent</h2>
+                    <?php if ($useJsonLog): ?>
+                    <span style="font-size:12px;color:var(--text-muted);">(Local Log)</span>
+                    <?php endif; ?>
+                </div>
 
-            <?php if (empty($sentEmails)): ?>
-            <div class="empty-state">
-                <div class="icon">&#128228;</div>
-                <p>No sent emails</p>
-            </div>
-            <?php else: ?>
-            <div class="email-list">
-                <?php if ($useJsonLog): ?>
-                    <?php foreach ($sentEmails as $email): ?>
-                    <div class="email-item">
-                        <div class="email-avatar"><?php echo getInitials($email['to']); ?></div>
-                        <div class="email-content">
-                            <div class="email-sender"><?php echo htmlspecialchars($email['to']); ?></div>
-                            <div class="email-subject"><?php echo htmlspecialchars($email['subject']); ?></div>
-                        </div>
-                        <div class="email-meta">
-                            <div class="email-date"><?php echo formatDate($email['date']); ?></div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
+                <?php if (empty($sentEmails)): ?>
+                <div class="empty-state">
+                    <i class="icon fa fa-paper-plane-o"></i>
+                    <p>No sent emails</p>
+                </div>
                 <?php else: ?>
-                    <?php foreach ($sentEmails as $email): ?>
-                    <div class="email-item">
-                        <div class="email-avatar"><?php echo getInitials($email['from_name']); ?></div>
-                        <div class="email-content">
-                            <div class="email-sender"><?php echo htmlspecialchars($email['from_name']); ?></div>
-                            <div class="email-subject"><?php echo htmlspecialchars($email['subject']); ?></div>
-                            <div class="email-preview"><?php echo htmlspecialchars($email['preview']); ?></div>
+                <div class="email-list">
+                    <?php if ($useJsonLog): ?>
+                        <?php foreach ($sentEmails as $email): ?>
+                        <div class="email-item">
+                            <div class="email-avatar"><?php echo getInitials($email['to']); ?></div>
+                            <div class="email-content">
+                                <span class="email-sender"><?php echo htmlspecialchars($email['to']); ?></span>
+                                <span class="email-subject"><?php echo htmlspecialchars($email['subject']); ?></span>
+                            </div>
+                            <div class="email-meta">
+                                <span class="email-date"><?php echo formatDate($email['date']); ?></span>
+                            </div>
                         </div>
-                        <div class="email-meta">
-                            <div class="email-date"><?php echo formatDate($email['date']); ?></div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <?php foreach ($sentEmails as $email): ?>
+                        <div class="email-item">
+                            <div class="email-avatar"><?php echo getInitials($email['from_name']); ?></div>
+                            <div class="email-content">
+                                <span class="email-sender"><?php echo htmlspecialchars($email['from_name']); ?></span>
+                                <span class="email-subject"><?php echo htmlspecialchars($email['subject']); ?></span>
+                            </div>
+                            <div class="email-meta">
+                                <span class="email-date"><?php echo formatDate($email['date']); ?></span>
+                            </div>
                         </div>
-                    </div>
-                    <?php endforeach; ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
                 <?php endif; ?>
             </div>
-            <?php endif; ?>
         </main>
     </div>
 </body>

@@ -38,6 +38,7 @@ function formatDate($timestamp) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inbox - Mail App</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://zenithkandel.com.np/fontawesome/zenith-icons.js"></script>
 </head>
 <body>
     <div class="app-layout">
@@ -49,22 +50,22 @@ function formatDate($timestamp) {
 
             <nav class="sidebar-nav">
                 <a href="inbox.php" class="nav-item active">
-                    <span class="icon">&#128229;</span>
+                    <i class="icon fa fa-inbox"></i>
                     Inbox
                     <?php if ($unreadCount > 0): ?>
                     <span class="badge"><?php echo $unreadCount; ?></span>
                     <?php endif; ?>
                 </a>
                 <a href="sent.php" class="nav-item">
-                    <span class="icon">&#128228;</span>
+                    <i class="icon fa fa-paper-plane"></i>
                     Sent
                 </a>
                 <a href="compose.php" class="nav-item">
-                    <span class="icon">&#9993;</span>
+                    <i class="icon fa fa-pencil"></i>
                     Compose
                 </a>
                 <a href="search.php" class="nav-item">
-                    <span class="icon">&#128269;</span>
+                    <i class="icon fa fa-search"></i>
                     Search
                 </a>
             </nav>
@@ -75,45 +76,46 @@ function formatDate($timestamp) {
                     <div class="sidebar-user-email"><?php echo htmlspecialchars($_SESSION['user']); ?></div>
                 </div>
                 <a href="logout.php" class="nav-item" style="margin-top: 12px; margin-left: -20px; margin-right: -20px;">
-                    <span class="icon">&#128682;</span>
+                    <i class="icon fa fa-sign-out"></i>
                     Logout
                 </a>
             </div>
         </aside>
 
         <main class="main-content">
-            <div class="page-header">
-                <h2 class="page-title">Inbox</h2>
-                <div class="page-actions">
-                    <button class="btn-icon" onclick="location.reload()" title="Refresh">&#8635;</button>
+            <div class="page-container">
+                <div class="page-header">
+                    <h2 class="page-title">Inbox</h2>
+                    <div class="page-actions">
+                        <button class="btn-icon" onclick="location.reload()" title="Refresh"><i class="fa fa-refresh"></i></button>
+                    </div>
                 </div>
-            </div>
 
-            <?php if (empty($emails)): ?>
-            <div class="empty-state">
-                <div class="icon">&#128231;</div>
-                <p>No emails in your inbox</p>
-            </div>
-            <?php else: ?>
-            <div class="email-list">
-                <?php foreach ($emails as $email): ?>
-                <a href="read.php?uid=<?php echo $email['uid']; ?>" class="email-item <?php echo $email['read'] ? '' : 'unread'; ?>">
-                    <div class="email-avatar"><?php echo getInitials($email['from_name']); ?></div>
-                    <div class="email-content">
-                        <div class="email-sender">
-                            <?php if (!$email['read']): ?><span class="unread-dot"></span><?php endif; ?>
-                            <?php echo htmlspecialchars($email['from_name']); ?>
+                <?php if (empty($emails)): ?>
+                <div class="empty-state">
+                    <i class="icon fa fa-envelope-o"></i>
+                    <p>No emails in your inbox</p>
+                </div>
+                <?php else: ?>
+                <div class="email-list">
+                    <?php foreach ($emails as $email): ?>
+                    <a href="read.php?uid=<?php echo $email['uid']; ?>" class="email-item <?php echo $email['read'] ? '' : 'unread'; ?>">
+                        <div class="email-avatar"><?php echo getInitials($email['from_name']); ?></div>
+                        <div class="email-content">
+                            <span class="email-sender">
+                                <?php if (!$email['read']): ?><span class="unread-dot"></span><?php endif; ?>
+                                <?php echo htmlspecialchars($email['from_name']); ?>
+                            </span>
+                            <span class="email-subject"><?php echo htmlspecialchars($email['subject']); ?></span>
                         </div>
-                        <div class="email-subject"><?php echo htmlspecialchars($email['subject']); ?></div>
-                        <div class="email-preview"><?php echo htmlspecialchars($email['preview']); ?></div>
-                    </div>
-                    <div class="email-meta">
-                        <div class="email-date"><?php echo formatDate($email['date']); ?></div>
-                    </div>
-                </a>
-                <?php endforeach; ?>
+                        <div class="email-meta">
+                            <span class="email-date"><?php echo formatDate($email['date']); ?></span>
+                        </div>
+                    </a>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
             </div>
-            <?php endif; ?>
         </main>
     </div>
 </body>
