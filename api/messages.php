@@ -3,7 +3,6 @@ require_once __DIR__ . '/../config.php';
 requireLogin();
 
 header('Content-Type: application/json');
-header('Transfer-Encoding: chunked');
 
 $folder = $_GET['folder'] ?? 'INBOX';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -32,19 +31,6 @@ try {
     $start = ($page - 1) * $perPage + 1;
     $end = min($page * $perPage, $total);
     $totalPages = ceil($total / $perPage);
-
-    ob_start();
-    echo json_encode([
-        'total' => $total,
-        'page' => $page,
-        'per_page' => $perPage,
-        'total_pages' => $totalPages,
-        'messages' => []
-    ]);
-    $initialJson = ob_get_clean();
-
-    echo $initialJson;
-    flush();
 
     $messages = [];
 
@@ -116,20 +102,18 @@ try {
                 'is_starred' => $overview[0]->flagged ? true : false,
                 'preview' => $preview
             ];
-
-            if (count($messages) % 10 === 0) {
-                ob_start();
-                echo json_encode(['partial' => $messages, 'received' => count($messages)]);
-                $chunk = ob_get_clean();
-                echo "\n" . strlen($chunk) . "\n" . $chunk;
-                flush();
-            }
         }
     }
 
     imap_close($imap);
 
-    echo "\n" . json_encode(['complete' => true, 'messages' => $messages]);
+    echo json_encode([
+        'total' => $total,
+        'page' => $page,
+        'per_page' => $perPage,
+        'total_pages' => $totalPages,
+        'messages' => $messages
+    ]);
 
 } catch (Exception $e) {
     http_response_code(500);

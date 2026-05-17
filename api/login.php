@@ -4,8 +4,11 @@ require_once __DIR__ . '/../config.php';
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $input = json_decode(file_get_contents('php://input'), true);
-    $password = $input['password'] ?? '';
+    $password = $_POST['password'] ?? '';
+    if (empty($password)) {
+        $input = json_decode(file_get_contents('php://input'), true);
+        $password = $input['password'] ?? '';
+    }
 
     if ($password === MAIL_PASS) {
         $_SESSION['authenticated'] = true;
