@@ -10,7 +10,7 @@ if (!function_exists('imap_open')) {
     exit;
 }
 
-session_start();
+require_once '../config.php';
 
 if (empty($_SESSION['authenticated']) || empty($_SESSION['username']) || empty($_SESSION['password'])) {
     echo json_encode(['error' => 'Not logged in']);
@@ -22,9 +22,10 @@ $page = max(1, intval($_GET['page'] ?? 1));
 
 $username = $_SESSION['username'];
 $password = $_SESSION['password'];
+$imapPrefix = '{mail.zenithkandel.com.np:993/imap/ssl}';
 
 $folderEncode = imap_utf7_encode($folder);
-$folderPath = '{mail.zenithkandel.com.np:993/imap/ssl}' . $folderEncode;
+$folderPath = $imapPrefix . $folderEncode;
 
 $mbox = @imap_open($folderPath, $username, $password);
 if (!$mbox) {

@@ -10,7 +10,7 @@ if (!function_exists('imap_open')) {
     exit;
 }
 
-session_start();
+require_once '../config.php';
 
 if (empty($_SESSION['authenticated']) || empty($_SESSION['username']) || empty($_SESSION['password'])) {
     echo json_encode(['error' => 'Not logged in']);
@@ -20,20 +20,22 @@ if (empty($_SESSION['authenticated']) || empty($_SESSION['username']) || empty($
 $username = $_SESSION['username'];
 $password = $_SESSION['password'];
 
-$mbox = @imap_open('{mail.zenithkandel.com.np:993/imap/ssl}INBOX', $username, $password);
+$imapPrefix = '{mail.zenithkandel.com.np:993/imap/ssl}';
+
+$mbox = @imap_open($imapPrefix . 'INBOX', $username, $password);
 if (!$mbox) {
     echo json_encode(['error' => 'Cannot connect: ' . imap_last_error()]);
     exit;
 }
 
-$list = @imap_list($mbox, IMAP_PREFIX, '*');
+$list = @imap_list($mbox, $imapPrefix, '*');
 
 $folders = [];
 if ($list) {
     foreach ($list as $folder) {
-        $name = str_replace(IMAP_PREFIX, '', $folder);
+        $name = str_replace($imapPrefix, '', $folder);
         $folderEncode = imap_utf7_encode($name);
-        $folderPath = IMAP_PREFIX . $folderEncode;
+        $folderPath = $imapPrefix . $folderEncode;
 
         $status = @imap_status($mbox, $folderPath, SA_ALL);
         $unread = $status ? $status->unseen : 0;
