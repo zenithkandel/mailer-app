@@ -5,32 +5,24 @@ ini_set('display_errors', 0);
 header('Content-Type: application/json');
 header('Cache-Control: no-cache');
 
-function output($data) {
-    echo json_encode($data);
+if (!function_exists('imap_open')) {
+    echo json_encode(['error' => 'IMAP extension not available']);
     exit;
 }
 
-register_shutdown_function(function() {
-    $error = error_get_last();
-    if ($error && in_array($error['type'], [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR])) {
-        if (!headers_sent()) {
-            header('Content-Type: application/json');
-            echo json_encode(['error' => 'Server error: ' . $error['message']]);
-        }
-        exit;
-    }
-});
+session_start();
 
-if (!function_exists('imap_open')) {
-    output(['error' => 'IMAP extension not available']);
+if (empty($_SESSION['authenticated']) || empty($_SESSION['username']) || empty($_SESSION['password'])) {
+    echo json_encode(['error' => 'Not logged in']);
+    exit;
 }
 
-require_once '../config.php';
-requireAuth();
+$username = $_SESSION['username'];
+$password = $_SESSION['password'];
 
-$mbox = getImapConnection();
+$mbox = @imap_open('{mail.zenithkandel.com.np:993/imap/ssl}INBOX', $username, $password);
 if (!$mbox) {
-    echo json_encode(['error' => 'Cannot connect to mail server']);
+    echo json_encode(['error' => 'Cannot connect: ' . imap_last_error()]);
     exit;
 }
 
