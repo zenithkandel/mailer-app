@@ -66,8 +66,11 @@ function fetchEmails($folder = 'INBOX', $limit = 50, $start = 0) {
             $preview = substr(strip_tags($body), 0, 100);
         }
 
+        $header = imap_headerinfo($connection, $i);
+        $uid = isset($header->uid) ? $header->uid : $i;
+
         $emails[] = [
-            'uid' => imap_msg_uid($connection, $i),
+            'uid' => $uid,
             'msgnum' => $i,
             'from_name' => $senderName,
             'from_email' => $senderEmail,
@@ -243,7 +246,7 @@ function searchEmails($query, $folder = 'INBOX') {
             }
 
             $emails[] = [
-                'uid' => imap_msg_uid($connection, $msgnum),
+                'uid' => isset($header->uid) ? $header->uid : $msgnum,
                 'msgnum' => $msgnum,
                 'from_name' => $senderName,
                 'from_email' => $senderEmail,
