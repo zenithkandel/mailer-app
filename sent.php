@@ -26,24 +26,6 @@ function getInitials($name) {
     }
     return $initials ?: '?';
 }
-
-function formatDate($timestamp) {
-    if (is_numeric($timestamp)) {
-        $ts = $timestamp;
-    } else {
-        $ts = strtotime($timestamp);
-    }
-    $now = time();
-    $diff = $now - $ts;
-
-    if ($diff < 86400) {
-        return date('H:i', $ts);
-    } elseif ($diff < 604800) {
-        return date('D', $ts);
-    } else {
-        return date('M d', $ts);
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -58,7 +40,7 @@ function formatDate($timestamp) {
     <div class="app-layout">
         <aside class="sidebar">
             <div class="sidebar-logo">
-                <h1>Mail</h1>
+                <h1><i class="fa-sharp-duotone fa-thin fa-envelope"></i> Mail</h1>
                 <p>Webmail</p>
             </div>
 
@@ -72,7 +54,7 @@ function formatDate($timestamp) {
                     Sent
                 </a>
                 <a href="compose.php" class="nav-item">
-                    <i class="fa-sharp-duotone fa-thin fa-pencil"></i>
+                    <i class="fa-sharp-duotone fa-thin fa-pen-nib"></i>
                     Compose
                 </a>
                 <a href="search.php" class="nav-item">
@@ -87,7 +69,7 @@ function formatDate($timestamp) {
                     <div class="sidebar-user-email"><?php echo htmlspecialchars($_SESSION['user']); ?></div>
                 </div>
                 <a href="logout.php" class="nav-item" style="margin-top: 12px; margin-left: -20px; margin-right: -20px;">
-                    <i class="fa-sharp-duotone fa-thin fa-sign-out"></i>
+                    <i class="fa-sharp-duotone fa-thin fa-right-from-bracket"></i>
                     Logout
                 </a>
             </div>
@@ -96,15 +78,15 @@ function formatDate($timestamp) {
         <main class="main-content">
             <div class="page-container">
                 <div class="page-header">
-                    <h2 class="page-title">Sent</h2>
+                    <h2 class="page-title"><i class="fa-sharp-duotone fa-thin fa-paper-plane"></i> Sent</h2>
                     <?php if ($useJsonLog): ?>
-                    <span style="font-size:12px;color:var(--text-muted);">(Local Log)</span>
+                    <span style="font-size:12px;color:var(--text-muted);"><i class="fa-sharp-duotone fa-thin fa-circle-info"></i> Local Log</span>
                     <?php endif; ?>
                 </div>
 
                 <?php if (empty($sentEmails)): ?>
                 <div class="empty-state">
-                    <i class="fa-sharp-duotone fa-thin fa-paper-plane"></i>
+                    <i class="fa-sharp-duotone fa-thin fa-paper-plane-empty"></i>
                     <p>No sent emails</p>
                 </div>
                 <?php else: ?>
@@ -118,7 +100,7 @@ function formatDate($timestamp) {
                                 <span class="email-subject"><?php echo htmlspecialchars($email['subject']); ?></span>
                             </div>
                             <div class="email-meta">
-                                <span class="email-date"><?php echo formatDate($email['date']); ?></span>
+                                <span class="email-date" data-date="<?php echo date('c', strtotime($email['date'])); ?>"><?php echo date('c', strtotime($email['date'])); ?></span>
                             </div>
                         </div>
                         <?php endforeach; ?>
@@ -131,7 +113,7 @@ function formatDate($timestamp) {
                                 <span class="email-subject"><?php echo htmlspecialchars($email['subject']); ?></span>
                             </div>
                             <div class="email-meta">
-                                <span class="email-date"><?php echo formatDate($email['date']); ?></span>
+                                <span class="email-date" data-date="<?php echo date('c', $email['date']); ?>"><?php echo date('c', $email['date']); ?></span>
                             </div>
                         </div>
                         <?php endforeach; ?>
@@ -141,5 +123,22 @@ function formatDate($timestamp) {
             </div>
         </main>
     </div>
+    <script>
+        document.querySelectorAll('.email-date').forEach(function(el) {
+            const date = new Date(el.getAttribute('data-date'));
+            const now = new Date();
+            const diff = now - date;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            if (days === 0) {
+                el.textContent = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            } else if (days === 1) {
+                el.textContent = 'Yesterday';
+            } else if (days < 7) {
+                el.textContent = date.toLocaleDateString([], {weekday: 'short'});
+            } else {
+                el.textContent = date.toLocaleDateString([], {month: 'short', day: 'numeric'});
+            }
+        });
+    </script>
 </body>
 </html>

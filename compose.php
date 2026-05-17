@@ -19,7 +19,7 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
     <div class="app-layout">
         <aside class="sidebar">
             <div class="sidebar-logo">
-                <h1>Mail</h1>
+                <h1><i class="fa-sharp-duotone fa-thin fa-envelope"></i> Mail</h1>
                 <p>Webmail</p>
             </div>
 
@@ -33,7 +33,7 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
                     Sent
                 </a>
                 <a href="compose.php" class="nav-item active">
-                    <i class="fa-sharp-duotone fa-thin fa-pencil"></i>
+                    <i class="fa-sharp-duotone fa-thin fa-pen-nib"></i>
                     Compose
                 </a>
                 <a href="search.php" class="nav-item">
@@ -48,7 +48,7 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
                     <div class="sidebar-user-email"><?php echo htmlspecialchars($_SESSION['user']); ?></div>
                 </div>
                 <a href="logout.php" class="nav-item" style="margin-top: 12px; margin-left: -20px; margin-right: -20px;">
-                    <i class="fa-sharp-duotone fa-thin fa-sign-out"></i>
+                    <i class="fa-sharp-duotone fa-thin fa-right-from-bracket"></i>
                     Logout
                 </a>
             </div>
@@ -57,35 +57,35 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
         <main class="main-content">
             <div class="page-container">
                 <div class="page-header">
-                    <h2 class="page-title">Compose</h2>
+                    <h2 class="page-title"><i class="fa-sharp-duotone fa-thin fa-pen-nib"></i> Compose</h2>
                 </div>
 
                 <?php if ($success): ?>
-                <div class="alert alert-success">Email sent successfully!</div>
+                <div class="alert alert-success"><i class="fa-sharp-duotone fa-thin fa-circle-check"></i> Email sent successfully!</div>
                 <?php endif; ?>
 
                 <?php if ($error): ?>
-                <div class="alert alert-error"><?php echo $error; ?></div>
+                <div class="alert alert-error"><i class="fa-sharp-duotone fa-thin fa-circle-exclamation"></i> <?php echo $error; ?></div>
                 <?php endif; ?>
 
                 <form class="compose-form" method="POST" action="send.php">
                     <div class="form-group">
-                        <label for="to">To</label>
+                        <label for="to"><i class="fa-sharp-duotone fa-thin fa-user"></i> To</label>
                         <input type="email" id="to" name="to" placeholder="recipient@example.com" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="subject">Subject</label>
+                        <label for="subject"><i class="fa-sharp-duotone fa-thin fa-heading"></i> Subject</label>
                         <input type="text" id="subject" name="subject" placeholder="Enter subject" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="message">Message</label>
+                        <label for="message"><i class="fa-sharp-duotone fa-thin fa-align-left"></i> Message</label>
                         <textarea id="message" name="message" placeholder="Write your message here..." required></textarea>
                     </div>
 
                     <div class="compose-actions">
-                        <button type="submit" class="btn btn-primary">Send Email</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-sharp-duotone fa-thin fa-paper-plane"></i> Send Email</button>
                     </div>
                 </form>
             </div>

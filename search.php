@@ -21,14 +21,6 @@ function getInitials($name) {
     }
     return $initials ?: '?';
 }
-
-function formatDate($timestamp) {
-    $now = time();
-    $diff = $now - $timestamp;
-    if ($diff < 86400) return date('H:i', $timestamp);
-    elseif ($diff < 604800) return date('D', $timestamp);
-    else return date('M d', $timestamp);
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -43,7 +35,7 @@ function formatDate($timestamp) {
     <div class="app-layout">
         <aside class="sidebar">
             <div class="sidebar-logo">
-                <h1>Mail</h1>
+                <h1><i class="fa-sharp-duotone fa-thin fa-envelope"></i> Mail</h1>
                 <p>Webmail</p>
             </div>
             <nav class="sidebar-nav">
@@ -54,7 +46,7 @@ function formatDate($timestamp) {
                     <i class="fa-sharp-duotone fa-thin fa-paper-plane"></i> Sent
                 </a>
                 <a href="compose.php" class="nav-item">
-                    <i class="fa-sharp-duotone fa-thin fa-pencil"></i> Compose
+                    <i class="fa-sharp-duotone fa-thin fa-pen-nib"></i> Compose
                 </a>
                 <a href="search.php" class="nav-item active">
                     <i class="fa-sharp-duotone fa-thin fa-magnifying-glass"></i> Search
@@ -66,23 +58,23 @@ function formatDate($timestamp) {
                     <div class="sidebar-user-email"><?php echo htmlspecialchars($_SESSION['user']); ?></div>
                 </div>
                 <a href="logout.php" class="nav-item" style="margin-top:12px;margin-left:-20px;margin-right:-20px;">
-                    <i class="fa-sharp-duotone fa-thin fa-sign-out"></i> Logout
+                    <i class="fa-sharp-duotone fa-thin fa-right-from-bracket"></i> Logout
                 </a>
             </div>
         </aside>
         <main class="main-content">
             <div class="page-container">
                 <div class="page-header">
-                    <h2 class="page-title">Search</h2>
+                    <h2 class="page-title"><i class="fa-sharp-duotone fa-thin fa-magnifying-glass"></i> Search</h2>
                 </div>
                 <form class="search-form" method="GET">
                     <input type="text" name="q" placeholder="Search by sender or subject..." value="<?php echo htmlspecialchars($query); ?>">
-                    <button type="submit" class="btn btn-primary">Search</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-sharp-duotone fa-thin fa-magnifying-glass"></i> Search</button>
                 </form>
                 <?php if ($query): ?>
                     <?php if (empty($results)): ?>
                     <div class="empty-state">
-                        <i class="fa-sharp-duotone fa-thin fa-magnifying-glass"></i>
+                        <i class="fa-sharp-duotone fa-thin fa-magnifying-glass-minus"></i>
                         <p>No results found for "<?php echo htmlspecialchars($query); ?>"</p>
                     </div>
                     <?php else: ?>
@@ -101,7 +93,7 @@ function formatDate($timestamp) {
                                 <span class="email-subject"><?php echo htmlspecialchars($email['subject']); ?></span>
                             </div>
                             <div class="email-meta">
-                                <span class="email-date"><?php echo formatDate($email['date']); ?></span>
+                                <span class="email-date" data-date="<?php echo date('c', $email['date']); ?>"><?php echo date('c', $email['date']); ?></span>
                             </div>
                         </a>
                         <?php endforeach; ?>
@@ -111,5 +103,22 @@ function formatDate($timestamp) {
             </div>
         </main>
     </div>
+    <script>
+        document.querySelectorAll('.email-date').forEach(function(el) {
+            const date = new Date(el.getAttribute('data-date'));
+            const now = new Date();
+            const diff = now - date;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            if (days === 0) {
+                el.textContent = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            } else if (days === 1) {
+                el.textContent = 'Yesterday';
+            } else if (days < 7) {
+                el.textContent = date.toLocaleDateString([], {weekday: 'short'});
+            } else {
+                el.textContent = date.toLocaleDateString([], {month: 'short', day: 'numeric'});
+            }
+        });
+    </script>
 </body>
 </html>

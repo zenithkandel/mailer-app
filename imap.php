@@ -2,7 +2,8 @@
 
 require_once __DIR__ . '/config.php';
 
-function imapConnect($folder = 'INBOX') {
+function imapConnect($folder = 'INBOX')
+{
     $host = '{' . IMAP_HOST . ':' . IMAP_PORT . '/ssl}' . $folder;
     $connection = @imap_open($host, IMAP_USER, IMAP_PASS, OP_READONLY);
 
@@ -13,7 +14,8 @@ function imapConnect($folder = 'INBOX') {
     return $connection;
 }
 
-function getUnreadCount($folder = 'INBOX') {
+function getUnreadCount($folder = 'INBOX')
+{
     $connection = imapConnect($folder);
     if (!$connection) {
         return 0;
@@ -26,7 +28,8 @@ function getUnreadCount($folder = 'INBOX') {
     return $count;
 }
 
-function fetchEmails($folder = 'INBOX', $limit = 50, $start = 0) {
+function fetchEmails($folder = 'INBOX', $limit = 50, $start = 0)
+{
     $connection = imapConnect($folder);
     if (!$connection) {
         return [];
@@ -45,7 +48,8 @@ function fetchEmails($folder = 'INBOX', $limit = 50, $start = 0) {
 
     for ($i = $startNum; $i >= $endNum; $i--) {
         $header = imap_headerinfo($connection, $i);
-        if (!$header) continue;
+        if (!$header)
+            continue;
 
         $overview = imap_fetch_overview($connection, $i, 0);
 
@@ -54,7 +58,8 @@ function fetchEmails($folder = 'INBOX', $limit = 50, $start = 0) {
         $senderEmail = $from ? ($from->mailbox . '@' . $from->host) : '';
 
         $subject = isset($header->subject) ? imap_mime_header_decode($header->subject) : '';
-        $subject = is_array($subject) ? implode('', array_map(function($s) { return $s->text; }, $subject)) : $subject;
+        $subject = is_array($subject) ? implode('', array_map(function ($s) {
+            return $s->text; }, $subject)) : $subject;
 
         $date = isset($header->udate) ? $header->udate : time();
         $read = isset($overview[0]->seen) && $overview[0]->seen == 1;
@@ -85,7 +90,8 @@ function fetchEmails($folder = 'INBOX', $limit = 50, $start = 0) {
     return $emails;
 }
 
-function fetchEmailByUid($uid) {
+function fetchEmailByUid($uid)
+{
     $connection = imapConnect();
     if (!$connection) {
         return null;
@@ -110,7 +116,8 @@ function fetchEmailByUid($uid) {
     $toEmail = $to ? ($to->mailbox . '@' . $to->host) : '';
 
     $subject = isset($header->subject) ? imap_mime_header_decode($header->subject) : '';
-    $subject = is_array($subject) ? implode('', array_map(function($s) { return $s->text; }, $subject)) : $subject;
+    $subject = is_array($subject) ? implode('', array_map(function ($s) {
+        return $s->text; }, $subject)) : $subject;
 
     $date = isset($header->udate) ? $header->udate : time();
 
@@ -156,7 +163,8 @@ function fetchEmailByUid($uid) {
     ];
 }
 
-function getAttachment($connection, $msgnum, $partNum, $part) {
+function getAttachment($connection, $msgnum, $partNum, $part)
+{
     $filename = '';
     if (isset($part->dparameters)) {
         foreach ($part->dparameters as $param) {
@@ -190,7 +198,28 @@ function getAttachment($connection, $msgnum, $partNum, $part) {
     ];
 }
 
-function deleteEmail($uid) {
+
+function markAsRead($uid)
+{
+    $connection = imapConnect();
+    if (!$connection) {
+        return false;
+    }
+
+    $msgnum = imap_msgno($connection, $uid);
+    if (!$msgnum) {
+        imap_close($connection);
+        return false;
+    }
+
+    imap_setflag_full($connection, $msgnum, '\\Seen');
+    imap_close($connection);
+
+    return true;
+}
+
+function deleteEmail($uid)
+{
     $connection = imapConnect();
     if (!$connection) {
         return false;
@@ -209,7 +238,8 @@ function deleteEmail($uid) {
     return true;
 }
 
-function searchEmails($query, $folder = 'INBOX') {
+function searchEmails($query, $folder = 'INBOX')
+{
     $connection = imapConnect($folder);
     if (!$connection) {
         return [];
@@ -224,14 +254,16 @@ function searchEmails($query, $folder = 'INBOX') {
     $emails = [];
     foreach ($search as $msgnum) {
         $header = imap_headerinfo($connection, $msgnum);
-        if (!$header) continue;
+        if (!$header)
+            continue;
 
         $from = isset($header->from[0]) ? $header->from[0] : null;
         $senderEmail = $from ? ($from->mailbox . '@' . $from->host) : '';
         $senderName = $from ? (isset($from->personal) ? $from->personal : $from->mailbox) : 'Unknown';
 
         $subject = isset($header->subject) ? imap_mime_header_decode($header->subject) : '';
-        $subject = is_array($subject) ? implode('', array_map(function($s) { return $s->text; }, $subject)) : $subject;
+        $subject = is_array($subject) ? implode('', array_map(function ($s) {
+            return $s->text; }, $subject)) : $subject;
 
         if (stripos($subject, $query) !== false || stripos($senderEmail, $query) !== false || stripos($senderName, $query) !== false) {
             $overview = imap_fetch_overview($connection, $msgnum, 0);
@@ -262,7 +294,8 @@ function searchEmails($query, $folder = 'INBOX') {
     return $emails;
 }
 
-function getSentFolderConnection() {
+function getSentFolderConnection()
+{
     $folders = ['INBOX.Sent', 'Sent', 'INBOX.Sent Messages', 'Sent Messages'];
 
     foreach ($folders as $folder) {

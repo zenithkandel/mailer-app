@@ -13,6 +13,8 @@ if (!$uid) {
 
 $email = fetchEmailByUid($uid);
 
+markAsRead($uid);
+
 if (!$email) {
     header('Location: inbox.php');
     exit;

@@ -20,13 +20,19 @@ function smtpConnect() {
 
     stream_set_timeout($socket, 30);
 
-    $response = fgets($socket, 512);
+    // Read all server responses until we get complete greeting
+    $response = '';
+    while (($line = fgets($socket, 512)) !== false) {
+        $response .= $line;
+        if (substr($line, 3, 1) === ' ') break;
+    }
+
     if (substr($response, 0, 3) !== '220') {
         fclose($socket);
         return ['success' => false, 'error' => "SMTP greeting failed: $response"];
     }
 
-    return ['success' => true, 'socket' => $socket];
+    return ['success' => true, 'socket' => $socket, 'greeting' => $response];
 }
 
 function smtpCommand($socket, $command, $expectedCode = null) {
@@ -50,10 +56,18 @@ function smtpSendEmail($to, $subject, $body, $headers = []) {
 
     $socket = $connect['socket'];
 
-    $ehlo = smtpCommand($socket, 'EHLO ' . SMTP_HOST, '250');
+    // Wait a bit for server to be ready
+    usleep(100000);
+
+    // Try EHLO with domain
+    $ehlo = smtpCommand($socket, 'EHLO localhost', '250');
     if (!$ehlo['success']) {
-        fclose($socket);
-        return ['success' => false, 'error' => 'EHLO failed: ' . $ehlo['response']];
+        // Try HELO if EHLO fails
+        $helo = smtpCommand($socket, 'HELO localhost', '250');
+        if (!$helo['success']) {
+            fclose($socket);
+            return ['success' => false, 'error' => 'HELO failed: ' . $helo['response']];
+        }
     }
 
     $auth = smtpCommand($socket, 'AUTH LOGIN', '334');
