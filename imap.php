@@ -2,8 +2,6 @@
 
 require_once __DIR__ . '/config.php';
 
-define('OP_READONLY', 0);
-
 function imapConnect($folder = 'INBOX') {
     $host = '{' . IMAP_HOST . ':' . IMAP_PORT . '/ssl}' . $folder;
     $connection = @imap_open($host, IMAP_USER, IMAP_PASS, OP_READONLY);
@@ -82,7 +80,7 @@ function fetchEmails($folder = 'INBOX', $limit = 50) {
         $date = isset($header->udate) ? $header->udate : time();
         $read = isset($overview[0]->seen) && $overview[0]->seen == 1;
         
-        $uid = @imap_msg_uid($connection, $i);
+        $uid = function_exists('imap_msg_uid') ? @imap_msg_uid($connection, $i) : @imap_uid($connection, $i);
         
         $emails[] = [
             'uid' => $uid ?: $i,
@@ -268,7 +266,7 @@ function searchEmails($query, $folder = 'INBOX', $limit = 50) {
         $date = isset($header->udate) ? $header->udate : time();
         $read = isset($overview[0]->seen) && $overview[0]->seen == 1;
         
-        $uid = @imap_msg_uid($connection, $msgnum);
+        $uid = function_exists('imap_msg_uid') ? @imap_msg_uid($connection, $msgnum) : @imap_uid($connection, $msgnum);
         
         if (count($emails) >= $limit) break;
         

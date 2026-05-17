@@ -236,9 +236,11 @@ a:hover {
 }
 
 .empty-state i {
-    font-size: 48px;
+    font-size: 32px;
     margin-bottom: 16px;
     display: block;
+    width: 100%;
+    text-align: center;
 }
 
 .email-list {
@@ -585,5 +587,73 @@ a:hover {
     
     .main-content {
         margin-left: 60px;
+        padding: 16px;
+        max-width: 100%;
+    }
+    
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .page-title {
+        font-size: 18px;
+    }
+    
+    .email-item {
+        padding: 10px 12px;
+    }
+    
+    .email-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+    
+    .email-content {
+        margin-left: 8px;
+    }
+    
+    .email-sender {
+        font-size: 13px;
+    }
+    
+    .email-subject {
+        font-size: 12px;
+    }
+    
+    .email-meta {
+        display: none;
+    }
+    
+    .compose-form {
+        padding: 16px;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        font-size: 14px;
+        padding: 8px 10px;
+    }
+    
+    .search-form input {
+        padding: 10px 12px;
+    }
+    
+    .email-header {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .email-header-from {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .email-header-subject {
+        font-size: 16px;
     }
 }

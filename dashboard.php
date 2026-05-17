@@ -244,6 +244,106 @@ requireLogin();
             });
         }
         
+        function openEmail(uid) {
+            loadPage('read', { uid: uid, from: currentPage });
+        }
+        
+        function deleteEmail(uid, from) {
+            if (!confirm('Delete this email?')) return;
+            fetch('api.php?action=delete&uid=' + uid).then(function() {
+                loadPage(from);
+            });
+        }
+        
+        function replyToEmail() {
+            var fromEl = document.querySelector('.email-header-email');
+            if (fromEl) {
+                var fromEmail = fromEl.textContent.replace(/[<>]/g, '').trim();
+                var subjectEl = document.querySelector('.email-header-subject');
+                var subject = subjectEl ? 'Re: ' + subjectEl.textContent : 'Re: ';
+                loadPage('compose', { replyto: fromEmail, subject: encodeURIComponent(subject) });
+            }
+        }
+        
+        function performSearch() {
+            var q = document.getElementById('searchQuery').value;
+            loadPage('search', { q: q });
+        }
+        
+        async function saveSettings() {
+            var senderName = document.getElementById('senderName').value;
+            var alertDiv = document.getElementById('settingsAlert');
+            
+            try {
+                var formData = new FormData();
+                formData.append('senderName', senderName);
+                
+                var response = await fetch('api.php?action=saveSettings', {
+                    method: 'POST',
+                    body: formData
+                });
+                var result = await response.json();
+                
+                if (result.success) {
+                    alertDiv.innerHTML = '<div class="alert alert-success"><i class="fa-sharp-duotone fa-thin fa-circle-check"></i> Settings saved!</div>';
+                    setTimeout(function() { alertDiv.innerHTML = ''; }, 3000);
+                } else {
+                    alertDiv.innerHTML = '<div class="alert alert-error"><i class="fa-sharp-duotone fa-thin fa-circle-exclamation"></i> Failed to save</div>';
+                }
+            } catch (err) {
+                if (alertDiv) alertDiv.innerHTML = '<div class="alert alert-error">Error saving settings</div>';
+            }
+        }
+        
+        async function addSignature() {
+            var name = document.getElementById('sigName').value;
+            var shortcut = document.getElementById('sigShortcut').value;
+            var content = document.getElementById('sigContent').value;
+            
+            if (!name || !content) {
+                alert('Please provide name and content');
+                return;
+            }
+            
+            try {
+                var formData = new FormData();
+                formData.append('name', name);
+                formData.append('shortcut', shortcut);
+                formData.append('content', content);
+                
+                var response = await fetch('api.php?action=addSignature', {
+                    method: 'POST',
+                    body: formData
+                });
+                var result = await response.json();
+                
+                if (result.success) {
+                    loadPage('settings');
+                } else {
+                    alert(result.error || 'Error adding signature');
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+        
+        async function deleteSignature(index) {
+            if (!confirm('Delete this signature?')) return;
+            
+            try {
+                var response = await fetch('api.php?action=deleteSignature&index=' + index);
+                var result = await response.json();
+                
+                if (result.success) {
+                    loadPage('settings');
+                } else {
+                    alert(result.error || 'Error deleting signature');
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+        
         window.addEventListener('load', function() {
             var savedPage = sessionStorage.getItem('mailer_page') || 'inbox';
             loadPage(savedPage);

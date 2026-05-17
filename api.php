@@ -23,17 +23,6 @@ if ($action === 'inbox') {
     $unreadCount = getUnreadCount();
     $emails = fetchEmails('INBOX', 50);
     
-    function getInitials($name) {
-        $parts = explode(' ', trim($name));
-        $initials = '';
-        foreach ($parts as $part) {
-            if (strlen($initials) < 2) {
-                $initials .= strtoupper(substr($part, 0, 1));
-            }
-        }
-        return $initials ?: '?';
-    }
-    
     echo '<span class="unread-count" style="display:none">' . $unreadCount . '</span>';
     
     echo '<div class="page-header">
@@ -108,18 +97,7 @@ if ($action === 'read') {
     
     markAsRead($uid);
     
-    function getInitialsRead($name) {
-        $parts = explode(' ', trim($name));
-        $initials = '';
-        foreach ($parts as $part) {
-            if (strlen($initials) < 2) {
-                $initials .= strtoupper(substr($part, 0, 1));
-            }
-        }
-        return $initials ?: '?';
-    }
-    
-    $initials = getInitialsRead($email['from_name']);
+    $initials = getInitials($email['from_name']);
     $date = date('Y-m-d H:i:s', $email['date']);
     
     echo '<div class="page-header">
