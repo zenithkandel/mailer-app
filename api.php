@@ -195,6 +195,30 @@ echo '</small>
     </form>
 
     <script>
+    function insertSignature(content) {
+        if (!content) return;
+        const textarea = document.getElementById("message");
+        textarea.value = (textarea.value ? textarea.value + "\\n\\n" : "") + content;
+        document.getElementById("signature").value = "";
+    }
+    
+    // Handle signature shortcuts
+    const sigShortcuts = {};
+    <?php foreach ($signatures as $sig): ?>
+    <?php if ($sig['shortcut']): ?>
+    sigShortcuts["<?php echo $sig['shortcut']; ?>"] = <?php echo json_encode($sig['content']); ?>;
+    <?php endif; ?>
+    <?php endforeach; ?>
+    
+    document.getElementById("message").addEventListener("input", function(e) {
+        const val = e.target.value;
+        const lastWord = val.split(/\\s+/).pop();
+        if (sigShortcuts[lastWord]) {
+            e.target.value = val.slice(0, -lastWord.length) + sigShortcuts[lastWord];
+            e.target.setSelectionRange(e.target.value.length, e.target.value.length);
+        }
+    });
+    
     document.getElementById("composeForm").addEventListener("submit", async function(e) {
         e.preventDefault();
         const form = this;
@@ -363,6 +387,7 @@ if ($action === 'send') {
     $to = trim($_POST['to'] ?? '');
     $subject = trim($_POST['subject'] ?? '');
     $message = $_POST['message'] ?? '';
+    $signature = $_POST['signature'] ?? '';
     
     if (empty($to) || empty($subject) || empty($message)) {
         echo json_encode(['success' => false, 'error' => 'All fields are required']);
@@ -372,6 +397,11 @@ if ($action === 'send') {
     if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
         echo json_encode(['success' => false, 'error' => 'Invalid email address']);
         exit;
+    }
+    
+    // Add signature to message
+    if ($signature) {
+        $message = $message . "\n\n" . $signature;
     }
     
     $result = smtpSendEmail($to, $subject, $message);
