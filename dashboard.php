@@ -1,125 +1,201 @@
 <?php
 require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/imap.php';
-require_once __DIR__ . '/smtp.php';
-
-requireLogin();
-
-$unreadCount = getUnreadCount();
-$inboxEmails = fetchEmails('INBOX', 10);
-$sentEmails = getSentLog();
-
-function getInitials($name) {
-    $parts = explode(' ', trim($name));
-    $initials = '';
-    foreach ($parts as $part) {
-        if (strlen($initials) < 2) $initials .= strtoupper(substr($part, 0, 1));
-    }
-    return $initials ?: '?';
-}
+require_login();
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Mail App</title>
+    <title>Mail - Webmail</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://zenithkandel.com.np/fontawesome/zenith-icons.js"></script>
+    <style>
+        .spa-container { display: flex; min-height: 100vh; }
+        .spa-main { flex: 1; margin-left: 240px; padding: 0; min-height: 100vh; }
+        .spa-content { max-width: 1000px; margin: 0 auto; padding: 32px 40px; }
+        
+        .send-progress {
+            display: none;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+        }
+        .send-progress.active { display: block; }
+        .progress-bar-container { display: flex; align-items: center; gap: 16px; }
+        .progress-spinner {
+            width: 24px; height: 24px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .progress-text { font-size: 13px; color: var(--text-secondary); }
+        .progress-steps { display: flex; gap: 8px; margin-top: 12px; }
+        .progress-step { flex: 1; height: 4px; background: var(--border); border-radius: 2px; transition: background 0.3s; }
+        .progress-step.active { background: var(--accent); }
+        .progress-step.completed { background: var(--success); }
+
+        .email-detail-header { padding: 24px 28px; border-bottom: 1px solid var(--border); }
+        .email-detail-body { padding: 28px; min-height: 300px; }
+        .email-detail-actions { padding: 16px 28px; border-top: 1px solid var(--border); display: flex; gap: 12px; }
+
+        .loading-spinner {
+            display: flex; justify-content: center; align-items: center;
+            padding: 60px; color: var(--text-muted);
+        }
+        .loading-spinner i { font-size: 24px; animation: spin 1s linear infinite; }
+    </style>
 </head>
 <body>
-    <div class="app-layout">
+    <div class="spa-container" id="app">
         <aside class="sidebar">
             <div class="sidebar-logo">
                 <h1><i class="fa-sharp-duotone fa-thin fa-envelope"></i> Mail</h1>
                 <p>Webmail</p>
             </div>
+
             <nav class="sidebar-nav">
-                <a href="inbox.php" class="nav-item">
+                <a href="#" class="nav-item active" data-page="inbox">
                     <i class="fa-sharp-duotone fa-thin fa-inbox"></i> Inbox
+                    <span class="badge" id="unreadBadge" style="display:none">0</span>
                 </a>
-                <a href="sent.php" class="nav-item">
+                <a href="#" class="nav-item" data-page="sent">
                     <i class="fa-sharp-duotone fa-thin fa-paper-plane"></i> Sent
                 </a>
-                <a href="compose.php" class="nav-item">
+                <a href="#" class="nav-item" data-page="compose">
                     <i class="fa-sharp-duotone fa-thin fa-pen-nib"></i> Compose
                 </a>
-                <a href="search.php" class="nav-item">
+                <a href="#" class="nav-item" data-page="search">
                     <i class="fa-sharp-duotone fa-thin fa-magnifying-glass"></i> Search
                 </a>
+                <a href="#" class="nav-item" data-page="settings">
+                    <i class="fa-sharp-duotone fa-thin fa-gear"></i> Settings
+                </a>
             </nav>
+
             <div class="sidebar-user">
                 <div class="sidebar-user-info">
                     <div class="sidebar-avatar">A</div>
                     <div class="sidebar-user-email"><?php echo htmlspecialchars($_SESSION['user']); ?></div>
                 </div>
-                <a href="logout.php" class="nav-item" style="margin-top:12px;margin-left:-20px;margin-right:-20px;">
+                <a href="#" class="nav-item" data-action="logout" style="margin-top:12px;margin-left:-20px;margin-right:-20px;">
                     <i class="fa-sharp-duotone fa-thin fa-right-from-bracket"></i> Logout
                 </a>
             </div>
         </aside>
-        <main class="main-content">
-            <div class="page-container">
-                <div class="page-header">
-                    <h2 class="page-title"><i class="fa-sharp-duotone fa-thin fa-chart-simple"></i> Dashboard</h2>
-                    <a href="compose.php" class="btn btn-peach"><i class="fa-sharp-duotone fa-thin fa-pen-nib"></i> Compose</a>
-                </div>
 
-                <div class="dashboard-stats">
-                    <div class="stat-card">
-                        <h3><i class="fa-sharp-duotone fa-thin fa-envelope-open"></i> Unread</h3>
-                        <div class="value green"><?php echo $unreadCount; ?></div>
-                    </div>
-                    <div class="stat-card">
-                        <h3><i class="fa-sharp-duotone fa-thin fa-paper-plane"></i> Sent</h3>
-                        <div class="value accent"><?php echo count($sentEmails); ?></div>
-                    </div>
-                </div>
-
-                <h3 class="section-header"><i class="fa-sharp-duotone fa-thin fa-clock-rotate-left"></i> Recent Inbox</h3>
-                <?php if (empty($inboxEmails)): ?>
-                <div class="empty-state">
-                    <i class="fa-sharp-duotone fa-thin fa-envelope-open"></i>
-                    <p>No emails in inbox</p>
-                </div>
-                <?php else: ?>
-                <div class="email-list">
-                    <?php foreach ($inboxEmails as $email): ?>
-                    <a href="read.php?uid=<?php echo $email['uid']; ?>" class="email-item <?php echo $email['read'] ? '' : 'unread'; ?>">
-                        <div class="email-avatar"><?php echo getInitials($email['from_name']); ?></div>
-                        <div class="email-content">
-                            <span class="email-sender">
-                                <?php if (!$email['read']): ?><span class="unread-dot"></span><?php endif; ?>
-                                <?php echo htmlspecialchars($email['from_name']); ?>
-                            </span>
-                            <span class="email-subject"><?php echo htmlspecialchars($email['subject']); ?></span>
-                        </div>
-                        <div class="email-meta">
-                            <span class="email-date" data-date="<?php echo date('c', $email['date']); ?>"><?php echo date('c', $email['date']); ?></span>
-                        </div>
-                    </a>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
+        <main class="spa-main">
+            <div class="spa-content" id="content">
+                <div class="loading-spinner"><i class="fa-sharp-duotone fa-thin fa-spinner"></i></div>
             </div>
         </main>
     </div>
+
     <script>
-        document.querySelectorAll('.email-date').forEach(function(el) {
-            const date = new Date(el.getAttribute('data-date'));
-            const now = new Date();
-            const diff = now - date;
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            if (days === 0) {
-                el.textContent = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            } else if (days === 1) {
-                el.textContent = 'Yesterday';
-            } else if (days < 7) {
-                el.textContent = date.toLocaleDateString([], {weekday: 'short'});
-            } else {
-                el.textContent = date.toLocaleDateString([], {month: 'short', day: 'numeric'});
-            }
+        const content = document.getElementById('content');
+        let currentPage = 'inbox';
+        let currentView = 'list';
+
+        // Navigation
+        document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = item.dataset.page;
+                currentView = 'list';
+                navigate(page);
+            });
         });
+
+        // Logout
+        document.querySelector('.nav-item[data-action="logout"]').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await fetch('api.php?action=logout');
+            window.location.href = 'index.php';
+        });
+
+        async function navigate(page, params = {}) {
+            currentPage = page;
+            currentView = 'list';
+            
+            // Update nav
+            document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+                item.classList.toggle('active', item.dataset.page === page);
+            });
+
+            content.innerHTML = '<div class="loading-spinner"><i class="fa-sharp-duotone fa-thin fa-spinner"></i></div>';
+
+            try {
+                const url = new URL('api.php', window.location.origin);
+                url.searchParams.set('action', page);
+                Object.keys(params).forEach(key => url.searchParams.set(key, params[key]));
+                
+                const response = await fetch(url);
+                const html = await response.text();
+                content.innerHTML = html;
+                
+                // Update unread badge
+                if (page === 'inbox') {
+                    const match = html.match(/unread-count">(\d+)/);
+                    if (match && parseInt(match[1]) > 0) {
+                        const badge = document.getElementById('unreadBadge');
+                        badge.textContent = match[1];
+                        badge.style.display = 'inline';
+                    } else {
+                        document.getElementById('unreadBadge').style.display = 'none';
+                    }
+                }
+            } catch (err) {
+                content.innerHTML = '<div class="alert alert-error">Error loading page</div>';
+            }
+        }
+
+        async function openEmail(uid) {
+            content.innerHTML = '<div class="loading-spinner"><i class="fa-sharp-duotone fa-thin fa-spinner"></i></div>';
+            
+            try {
+                const url = new URL('api.php', window.location.origin);
+                url.searchParams.set('action', 'read');
+                url.searchParams.set('uid', uid);
+                url.searchParams.set('from', currentPage);
+                
+                const response = await fetch(url);
+                const html = await response.text();
+                content.innerHTML = html;
+                currentView = 'read';
+            } catch (err) {
+                content.innerHTML = '<div class="alert alert-error">Error loading email</div>';
+            }
+        }
+
+        async function deleteEmail(uid, fromPage) {
+            if (!confirm('Delete this email?')) return;
+            
+            const formData = new FormData();
+            formData.append('uid', uid);
+            formData.append('from', fromPage);
+            
+            try {
+                const response = await fetch('api.php?action=delete', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    navigate(fromPage);
+                } else {
+                    alert('Failed to delete email');
+                }
+            } catch (err) {
+                alert('Error deleting email');
+            }
+        }
+
+        // Initial load
+        navigate('inbox');
     </script>
 </body>
 </html>

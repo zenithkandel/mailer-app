@@ -2,48 +2,41 @@
 
 function smtpConnect() {
     $host = SMTP_HOST;
-    $port = SMTP_PORT;
+    $port = 587; // Use submission port with STARTTLS
 
-    $context = stream_context_create([
-        'ssl' => [
-            'verify_peer' => false,
-            'verify_peer_name' => false,
-            'allow_self_signed' => true
-        ]
-    ]);
-
-    $socket = @fsockopen('ssl://' . $host, $port, $errno, $errstr, 30);
+    $socket = @fsockopen($host, $port, $errno, $errstr, 10);
 
     if (!$socket) {
         return ['success' => false, 'error' => "Connection failed: $errstr ($errno)"];
     }
 
-    stream_set_timeout($socket, 30);
+    stream_set_timeout($socket, 10);
 
-    // Read all server responses until we get complete greeting
-    $response = '';
-    while (($line = fgets($socket, 512)) !== false) {
-        $response .= $line;
-        if (substr($line, 3, 1) === ' ') break;
-    }
+    // Read greeting properly - handle multi-line
+    do {
+        $line = fgets($socket, 512);
+        $response = $line;
+    } while (isset($line[3]) && $line[3] !== ' ');
 
     if (substr($response, 0, 3) !== '220') {
         fclose($socket);
         return ['success' => false, 'error' => "SMTP greeting failed: $response"];
     }
 
-    return ['success' => true, 'socket' => $socket, 'greeting' => $response];
-}
-
-function smtpCommand($socket, $command, $expectedCode = null) {
-    fwrite($socket, $command . "\r\n");
-    $response = fgets($socket, 512);
-
-    if ($expectedCode && substr($response, 0, 3) !== $expectedCode) {
-        return ['success' => false, 'response' => $response];
+    // Read any additional lines after greeting
+    while (!feof($socket)) {
+        $line = fgets($socket, 512);
+        if (!$line || $line === "\n") break;
     }
 
-    return ['success' => true, 'response' => $response];
+    return ['success' => true, 'socket' => $socket];
+}
+
+function smtpRead($socket, $blocking = false) {
+    if ($blocking) {
+        stream_set_timeout($socket, 10);
+    }
+    return fgets($socket, 512);
 }
 
 function smtpSendEmail($to, $subject, $body, $headers = []) {
@@ -56,58 +49,97 @@ function smtpSendEmail($to, $subject, $body, $headers = []) {
 
     $socket = $connect['socket'];
 
-    // Wait a bit for server to be ready
-    usleep(100000);
+    // EHLO with proper domain
+    fwrite($socket, "EHLO " . SMTP_HOST . "\r\n");
+    
+    // Read all EHLO response lines
+    $ehloData = '';
+    do {
+        $response = fgets($socket, 512);
+        $ehloData .= $response;
+    } while (isset($response[3]) && $response[3] !== ' ');
 
-    // Try EHLO with domain
-    $ehlo = smtpCommand($socket, 'EHLO localhost', '250');
-    if (!$ehlo['success']) {
-        // Try HELO if EHLO fails
-        $helo = smtpCommand($socket, 'HELO localhost', '250');
-        if (!$helo['success']) {
-            fclose($socket);
-            return ['success' => false, 'error' => 'HELO failed: ' . $helo['response']];
+    if (substr($ehloData, 0, 3) !== '250') {
+        fclose($socket);
+        return ['success' => false, 'error' => 'EHLO failed: ' . $ehloData];
+    }
+
+    // Check if STARTTLS is available
+    if (stripos($ehloData, 'STARTTLS') !== false) {
+        fwrite($socket, "STARTTLS\r\n");
+        $response = smtpRead($socket, true);
+        
+        if (substr($response, 0, 3) === '220') {
+            // Upgrade to TLS
+            if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                fclose($socket);
+                return ['success' => false, 'error' => 'TLS upgrade failed'];
+            }
+            
+            // Send EHLO again after TLS
+            fwrite($socket, "EHLO " . SMTP_HOST . "\r\n");
+            $response = smtpRead($socket);
+            while (isset($response[3]) && $response[3] !== ' ') {
+                $response = fgets($socket, 512);
+            }
         }
     }
 
-    $auth = smtpCommand($socket, 'AUTH LOGIN', '334');
-    if (!$auth['success']) {
+    // AUTH LOGIN
+    fwrite($socket, "AUTH LOGIN\r\n");
+    $response = smtpRead($socket, true);
+    if (substr($response, 0, 3) !== '334') {
         fclose($socket);
-        return ['success' => false, 'error' => 'AUTH LOGIN failed: ' . $auth['response']];
+        return ['success' => false, 'error' => 'AUTH LOGIN failed: ' . $response];
     }
 
-    $username = smtpCommand($socket, base64_encode(SMTP_USER), '334');
-    if (!$username['success']) {
+    // Username
+    fwrite($socket, base64_encode(SMTP_USER) . "\r\n");
+    $response = smtpRead($socket, true);
+    if (substr($response, 0, 3) !== '334') {
         fclose($socket);
-        return ['success' => false, 'error' => 'Username failed: ' . $username['response']];
+        return ['success' => false, 'error' => 'Username failed: ' . $response];
     }
 
-    $password = smtpCommand($socket, base64_encode(SMTP_PASS), '235');
-    if (!$password['success']) {
+    // Password
+    fwrite($socket, base64_encode(SMTP_PASS) . "\r\n");
+    $response = smtpRead($socket, true);
+    if (substr($response, 0, 3) !== '235') {
         fclose($socket);
-        return ['success' => false, 'error' => 'Authentication failed: ' . $password['response']];
+        return ['success' => false, 'error' => 'Authentication failed: ' . $response];
     }
 
-    $from = smtpCommand($socket, 'MAIL FROM:<' . SMTP_FROM . '>', '250');
-    if (!$from['success']) {
+    // MAIL FROM
+    fwrite($socket, "MAIL FROM: <" . SMTP_FROM . ">\r\n");
+    $response = smtpRead($socket, true);
+    if (substr($response, 0, 3) !== '250') {
         fclose($socket);
-        return ['success' => false, 'error' => 'MAIL FROM failed: ' . $from['response']];
+        return ['success' => false, 'error' => 'MAIL FROM failed: ' . $response];
     }
 
-    $rcpt = smtpCommand($socket, 'RCPT TO:<' . $to . '>', '250');
-    if (!$rcpt['success']) {
+    // RCPT TO
+    fwrite($socket, "RCPT TO: <" . $to . ">\r\n");
+    $response = smtpRead($socket, true);
+    if (substr($response, 0, 3) !== '250') {
         fclose($socket);
-        return ['success' => false, 'error' => 'RCPT TO failed: ' . $rcpt['response']];
+        return ['success' => false, 'error' => 'RCPT TO failed: ' . $response];
     }
 
-    $data = smtpCommand($socket, 'DATA', '354');
-    if (!$data['success']) {
+    // DATA
+    fwrite($socket, "DATA\r\n");
+    $response = smtpRead($socket, true);
+    if (substr($response, 0, 3) !== '354') {
         fclose($socket);
-        return ['success' => false, 'error' => 'DATA failed: ' . $data['response']];
+        return ['success' => false, 'error' => 'DATA failed: ' . $response];
     }
 
+    // Email content
+    $userConfig = getUserConfig();
+    $senderName = $userConfig['senderName'] ?? '';
+    $fromHeader = $senderName ? '"' . $senderName . '" <' . SMTP_FROM . '>' : SMTP_FROM;
+    
     $emailHeaders = [
-        'From: ' . SMTP_FROM,
+        'From: ' . $fromHeader,
         'To: ' . $to,
         'Subject: ' . $subject,
         'MIME-Version: 1.0',
@@ -119,13 +151,13 @@ function smtpSendEmail($to, $subject, $body, $headers = []) {
         $emailHeaders[] = $key . ': ' . $value;
     }
 
-    $fullBody = implode("\r\n", $emailHeaders) . "\r\n\r\n" . $body . "\r\n.";
+    $fullBody = implode("\r\n", $emailHeaders) . "\r\n\r\n" . $body . "\r\n.\r\n";
 
-    fwrite($socket, $fullBody . "\r\n");
-    $response = fgets($socket, 512);
+    fwrite($socket, $fullBody);
+    $response = smtpRead($socket, true);
 
     fwrite($socket, "QUIT\r\n");
-    fgets($socket, 512);
+    @fgets($socket, 512);
     fclose($socket);
 
     if (substr($response, 0, 3) === '250') {

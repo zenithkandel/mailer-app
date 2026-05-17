@@ -14,6 +14,56 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
     <title>Compose - Mail App</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://zenithkandel.com.np/fontawesome/zenith-icons.js"></script>
+    <style>
+        .send-progress {
+            display: none;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+        }
+        .send-progress.active {
+            display: block;
+        }
+        .progress-bar-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .progress-spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .progress-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .progress-steps {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .progress-step {
+            flex: 1;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            transition: background 0.3s;
+        }
+        .progress-step.active {
+            background: var(--accent);
+        }
+        .progress-step.completed {
+            background: var(--success);
+        }
+    </style>
 </head>
 <body>
     <div class="app-layout">
@@ -68,7 +118,21 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
                 <div class="alert alert-error"><i class="fa-sharp-duotone fa-thin fa-circle-exclamation"></i> <?php echo $error; ?></div>
                 <?php endif; ?>
 
-                <form class="compose-form" method="POST" action="send.php">
+                <div class="send-progress" id="sendProgress">
+                    <div class="progress-bar-container">
+                        <div class="progress-spinner"></div>
+                        <span class="progress-text" id="progressText">Connecting to server...</span>
+                    </div>
+                    <div class="progress-steps">
+                        <div class="progress-step" id="step1"></div>
+                        <div class="progress-step" id="step2"></div>
+                        <div class="progress-step" id="step3"></div>
+                        <div class="progress-step" id="step4"></div>
+                        <div class="progress-step" id="step5"></div>
+                    </div>
+                </div>
+
+                <form class="compose-form" id="composeForm" method="POST" action="send.php">
                     <div class="form-group">
                         <label for="to"><i class="fa-sharp-duotone fa-thin fa-user"></i> To</label>
                         <input type="email" id="to" name="to" placeholder="recipient@example.com" required>
@@ -85,11 +149,56 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
                     </div>
 
                     <div class="compose-actions">
-                        <button type="submit" class="btn btn-primary"><i class="fa-sharp-duotone fa-thin fa-paper-plane"></i> Send Email</button>
+                        <button type="submit" class="btn btn-primary" id="sendBtn"><i class="fa-sharp-duotone fa-thin fa-paper-plane"></i> Send Email</button>
                     </div>
                 </form>
             </div>
         </main>
     </div>
+    <script>
+        const form = document.getElementById('composeForm');
+        const progress = document.getElementById('sendProgress');
+        const progressText = document.getElementById('progressText');
+        const sendBtn = document.getElementById('sendBtn');
+        const steps = [
+            document.getElementById('step1'),
+            document.getElementById('step2'),
+            document.getElementById('step3'),
+            document.getElementById('step4'),
+            document.getElementById('step5')
+        ];
+
+        function updateProgress(step, text) {
+            for (let i = 0; i < step - 1; i++) {
+                steps[i].className = 'progress-step completed';
+            }
+            steps[step - 1].className = 'progress-step active';
+            progressText.textContent = text;
+        }
+
+        form.addEventListener('submit', function(e) {
+            progress.classList.add('active');
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fa-sharp-duotone fa-thin fa-spinner fa-spin"></i> Sending...';
+
+            updateProgress(1, 'Connecting to server...');
+
+            let step = 2;
+            const interval = setInterval(() => {
+                if (step <= 5) {
+                    const texts = [
+                        'Authenticating...',
+                        'Preparing email...',
+                        'Sending...',
+                        'Finalizing...'
+                    ];
+                    updateProgress(step, texts[step - 2] || 'Sending...');
+                    step++;
+                }
+            }, 800);
+
+            // Progress will continue until page redirects
+        });
+    </script>
 </body>
 </html>

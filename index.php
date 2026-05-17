@@ -2,7 +2,7 @@
 require_once __DIR__ . '/config.php';
 
 if (isLoggedIn()) {
-    header('Location: inbox.php');
+    header('Location: dashboard.php');
     exit;
 }
 
@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($email === ADMIN_EMAIL && $password === ADMIN_PASS) {
         $_SESSION['user'] = $email;
-        header('Location: inbox.php');
+        header('Location: dashboard.php');
         exit;
     } else {
         $error = 'Invalid email or password';
@@ -29,8 +29,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Login - Mail App</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://zenithkandel.com.np/fontawesome/zenith-icons.js"></script>
+    <style>
+        .login-page { display: block; }
+        .app-layout { display: none; }
+    </style>
 </head>
 <body>
+    <?php if (!isLoggedIn()): ?>
     <div class="login-page">
         <div class="login-card">
             <div class="login-logo">
@@ -57,5 +62,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
         </div>
     </div>
+    <?php endif; ?>
 </body>
 </html>
