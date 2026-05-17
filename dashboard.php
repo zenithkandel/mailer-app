@@ -4,6 +4,7 @@ requireLogin();
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,10 +12,28 @@ requireLogin();
     <link rel="stylesheet" href="style.css">
     <script src="https://zenithkandel.com.np/fontawesome/zenith-icons.js"></script>
     <style>
-        .spa-container { display: flex; min-height: 100vh; }
-        .spa-sidebar { width: 240px; flex-shrink: 0; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; }
-        .spa-main { flex: 1; margin-left: 240px; padding: 32px; max-width: 900px; }
-        
+        .spa-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .spa-sidebar {
+            width: 240px;
+            flex-shrink: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .spa-main {
+            flex: 1;
+            margin-left: 240px;
+            padding: 32px;
+            max-width: 900px;
+        }
+
         .loader-full {
             position: fixed;
             top: 0;
@@ -28,394 +47,26 @@ requireLogin();
             justify-content: center;
             z-index: 200;
         }
-        .loader-full.hidden { display: none; }
-        
+
+        .loader-full.hidden {
+            display: none;
+        }
+
         .loader-full-content {
             text-align: center;
             width: 300px;
         }
-        
+
         .loader-icon {
             font-size: 32px;
             color: var(--accent);
             margin-bottom: 16px;
             animation: pulse 1.5s ease-in-out infinite;
         }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 0.5; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.1); }
-        }
-        
-        .loader-title {
-            font-size: 16px;
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-        }
-        
-        .loader-bar-container {
-            background: var(--border);
-            height: 8px;
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 16px 0;
-        }
-        
-        .loader-bar {
-            height: 100%;
-            background: var(--accent);
-            width: 0%;
-            transition: width 0.3s ease;
-            border-radius: 4px;
-        }
-        
-        .loader-bar.steps { 
-            background: linear-gradient(90deg, var(--accent) 0%, var(--accent) 25%, var(--border) 25%, var(--border) 50%, var(--border) 50%, var(--border) 75%, var(--border) 75%);
-        }
-        
-        .loader-status {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-        
-        .loader-sub {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-    </style>
-</head>
-<body>
-    <div class="loader-full" id="loader">
-        <div class="loader-full-content">
-            <div class="loader-icon"><i class="fa-sharp-duotone fa-thin fa-circle-notch"></i></div>
-            <div class="loader-title" id="loaderTitle">Loading...</div>
-            <div class="loader-bar-container">
-                <div class="loader-bar" id="loaderBar"></div>
-            </div>
-            <div class="loader-status" id="loaderStatus">Preparing</div>
-            <div class="loader-sub" id="loaderSub"></div>
-        </div>
-    </div>
 
-    <div class="spa-container" id="app">
-        <aside class="sidebar">
-            <div class="sidebar-logo">
-                <h1><i class="fa-sharp-duotone fa-thin fa-envelope"></i> Mail</h1>
-                <p>Webmail</p>
-            </div>
+        <?php
+        require_once __DIR__ . '/config.php';
+        requireLogin();
 
-            <nav class="sidebar-nav">
-                <a href="#" class="nav-item active" data-page="inbox" onclick="loadPage('inbox')">
-                    <i class="fa-sharp-duotone fa-thin fa-inbox"></i> Inbox
-                    <span class="badge" id="unreadBadge" style="display: none;">0</span>
-                </a>
-                <a href="#" class="nav-item" data-page="sent" onclick="loadPage('sent')">
-                    <i class="fa-sharp-duotone fa-thin fa-paper-plane"></i> Sent
-                </a>
-                <a href="#" class="nav-item" data-page="compose" onclick="loadPage('compose')">
-                    <i class="fa-sharp-duotone fa-thin fa-pen-nib"></i> Compose
-                </a>
-                <a href="#" class="nav-item" data-page="search" onclick="loadPage('search')">
-                    <i class="fa-sharp-duotone fa-thin fa-magnifying-glass"></i> Search
-                </a>
-                <a href="#" class="nav-item" data-page="settings" onclick="loadPage('settings')">
-                    <i class="fa-sharp-duotone fa-thin fa-gear"></i> Settings
-                </a>
-            </nav>
-
-            <div class="sidebar-user">
-                <div class="sidebar-user-info">
-                    <div class="sidebar-avatar">A</div>
-                    <div class="sidebar-user-email"><?php echo htmlspecialchars($_SESSION['user']); ?></div>
-                </div>
-                <a href="#" class="nav-item" onclick="logout()" style="margin-top: 12px; margin-left: -20px; margin-right: -20px;">
-                    <i class="fa-sharp-duotone fa-thin fa-right-from-bracket"></i> Logout
-                </a>
-            </div>
-        </aside>
-
-        <main class="spa-main" id="content">
-        </main>
-    </div>
-
-    <script>
-        var currentPage = 'inbox';
-        var loader = document.getElementById('loader');
-        var loaderTitle = document.getElementById('loaderTitle');
-        var loaderBar = document.getElementById('loaderBar');
-        var loaderStatus = document.getElementById('loaderStatus');
-        var loaderSub = document.getElementById('loaderSub');
-        var content = document.getElementById('content');
-        
-        var pageSteps = {
-            'inbox': ['Connecting to mail server', 'Fetching inbox messages', 'Decoding message headers', 'Rendering email list'],
-            'sent': ['Connecting to mail server', 'Loading sent folder', 'Processing messages', 'Building sent list'],
-            'compose': ['Initializing composer', 'Loading templates', 'Ready to compose'],
-            'search': ['Preparing search', 'Building search index', 'Ready to search'],
-            'settings': ['Loading user preferences', 'Fetching saved settings', 'Applying configuration']
-        };
-        
-        function showLoader(title, steps) {
-            loader.classList.remove('hidden');
-            loaderTitle.textContent = title;
-            loaderBar.classList.add('steps');
-            loaderBar.style.width = '0%';
-            
-            var stepIndex = 0;
-            loaderStatus.textContent = steps[0] || 'Loading...';
-            
-            var interval = setInterval(function() {
-                stepIndex++;
-                var progress = (stepIndex / steps.length) * 100;
-                loaderBar.style.width = progress + '%';
-                
-                if (stepIndex < steps.length) {
-                    loaderStatus.textContent = steps[stepIndex];
-                }
-                
-                if (stepIndex >= steps.length) {
-                    clearInterval(interval);
-                }
-            }, 400);
-            
-            return interval;
-        }
-        
-        function hideLoader(interval) {
-            if (interval) clearInterval(interval);
-            loaderBar.style.width = '100%';
-            loaderStatus.textContent = 'Complete';
-            setTimeout(function() {
-                loader.classList.add('hidden');
-                loaderBar.style.width = '0%';
-            }, 200);
-        }
-        
-        function loadPage(page, params) {
-            currentPage = page;
-            sessionStorage.setItem('mailer_page', page);
-            
-            document.querySelectorAll('.nav-item[data-page]').forEach(function(item) {
-                item.classList.toggle('active', item.dataset.page === page);
-            });
-            
-            var steps = pageSteps[page] || ['Loading'];
-            var interval = showLoader(page.charAt(0).toUpperCase() + page.slice(1), steps);
-            
-            var url = 'api.php?action=' + page;
-            if (params) {
-                Object.keys(params).forEach(function(key) {
-                    url += '&' + key + '=' + encodeURIComponent(params[key]);
-                });
-            }
-            
-            content.innerHTML = '<div class="loading-placeholder"></div>';
-            
-            fetch(url).then(function(response) {
-                return response.text();
-            }).then(function(html) {
-                hideLoader(interval);
-                content.innerHTML = html;
-                
-                if (page === 'inbox') {
-                    var match = html.match(/unread-count">(\d+)/);
-                    if (match) {
-                        var count = parseInt(match[1]);
-                        var badge = document.getElementById('unreadBadge');
-                        if (count > 0) {
-                            badge.textContent = count;
-                            badge.style.display = 'inline';
-                        } else {
-                            badge.style.display = 'none';
-                        }
-                    }
-                }
-            }).catch(function(err) {
-                hideLoader(interval);
-                content.innerHTML = '<div class="alert alert-error">Error loading page: ' + err.message + '</div>';
-            });
-        }
-        
-        function logout() {
-            fetch('api.php?action=logout').then(function() {
-                window.location.href = 'index.php';
-            });
-        }
-        
-        function openEmail(uid) {
-            loadPage('read', { uid: uid, from: currentPage });
-        }
-        
-        function deleteEmail(uid, from) {
-            if (!confirm('Delete this email?')) return;
-            fetch('api.php?action=delete&uid=' + uid).then(function() {
-                loadPage(from);
-            });
-        }
-        
-        function replyToEmail() {
-            var fromEl = document.querySelector('.email-header-email');
-            if (fromEl) {
-                var fromEmail = fromEl.textContent.replace(/[<>]/g, '').trim();
-                var subjectEl = document.querySelector('.email-header-subject');
-                var subject = subjectEl ? 'Re: ' + subjectEl.textContent : 'Re: ';
-                loadPage('compose', { replyto: fromEmail, subject: encodeURIComponent(subject) });
-            }
-        }
-        
-        function applySignature() {
-            var select = document.getElementById('signature');
-            var body = document.getElementById('body');
-            if (select && body && select.value) {
-                body.value += (body.value ? '\n\n' : '') + select.value;
-            }
-        }
-        
-        async function sendEmail(e) {
-            e.preventDefault();
-            var form = document.getElementById('composeForm');
-            var formData = new FormData(form);
-            var alertDiv = document.getElementById('composeAlert');
-            var progress = document.getElementById('progress');
-            var progressText = progress ? progress.querySelector('.progress-text') : null;
-            var steps = progress ? progress.querySelectorAll('.progress-step') : [];
-            
-            if (progress) progress.style.display = 'flex';
-            var step = 1;
-            var progressInterval = setInterval(function() {
-                if (step <= 5 && progressText) {
-                    steps[step-1].className = 'progress-step active';
-                    var texts = ['Connecting to server...', 'Authenticating...', 'Preparing email...', 'Sending...', 'Finalizing...'];
-                    progressText.textContent = texts[step-1];
-                    step++;
-                }
-            }, 600);
-            
-            try {
-                var response = await fetch('api.php?action=send', {
-                    method: 'POST',
-                    body: formData
-                });
-                var result = await response.json();
-                
-                clearInterval(progressInterval);
-                if (steps.length > 0) {
-                    steps.forEach(function(s) { s.className = 'progress-step completed'; });
-                }
-                
-                if (result.success) {
-                    if (progressText) progressText.textContent = 'Sent!';
-                    if (alertDiv) alertDiv.innerHTML = '<div class="alert alert-success"><i class="fa-sharp-duotone fa-thin fa-circle-check"></i> Email sent successfully!</div>';
-                    form.reset();
-                    if (progress) setTimeout(function() { progress.style.display = 'none'; }, 1500);
-                } else {
-                    if (progressText) progressText.textContent = 'Failed';
-                    if (steps[4]) steps[4].style.background = 'var(--danger)';
-                    if (alertDiv) alertDiv.innerHTML = '<div class="alert alert-error"><i class="fa-sharp-duotone fa-thin fa-circle-exclamation"></i> ' + result.error + '</div>';
-                    if (progress) setTimeout(function() { progress.style.display = 'none'; }, 2000);
-                }
-            } catch (err) {
-                clearInterval(progressInterval);
-                if (progress) progress.style.display = 'none';
-                if (alertDiv) alertDiv.innerHTML = '<div class="alert alert-error">Error: ' + err.message + '</div>';
-            }
-        }
-        
-        function performSearch() {
-            var q = document.getElementById('searchQuery').value;
-            loadPage('search', { q: q });
-        }
-        
-        function getInitials(name) {
-            if (!name) return '?';
-            var parts = name.trim().split(' ');
-            var initials = '';
-            for (var i = 0; i < parts.length && initials.length < 2; i++) {
-                if (parts[i]) initials += parts[i].charAt(0).toUpperCase();
-            }
-            return initials || '?';
-        }
-        
-        async function saveSettings() {
-            var senderName = document.getElementById('senderName').value;
-            var alertDiv = document.getElementById('settingsAlert');
-            
-            try {
-                var formData = new FormData();
-                formData.append('senderName', senderName);
-                
-                var response = await fetch('api.php?action=saveSettings', {
-                    method: 'POST',
-                    body: formData
-                });
-                var result = await response.json();
-                
-                if (result.success) {
-                    alertDiv.innerHTML = '<div class="alert alert-success"><i class="fa-sharp-duotone fa-thin fa-circle-check"></i> Settings saved!</div>';
-                    setTimeout(function() { alertDiv.innerHTML = ''; }, 3000);
-                } else {
-                    alertDiv.innerHTML = '<div class="alert alert-error"><i class="fa-sharp-duotone fa-thin fa-circle-exclamation"></i> Failed to save</div>';
-                }
-            } catch (err) {
-                if (alertDiv) alertDiv.innerHTML = '<div class="alert alert-error">Error saving settings</div>';
-            }
-        }
-        
-        async function addSignature() {
-            var name = document.getElementById('sigName').value;
-            var shortcut = document.getElementById('sigShortcut').value;
-            var content = document.getElementById('sigContent').value;
-            
-            if (!name || !content) {
-                alert('Please provide name and content');
-                return;
-            }
-            
-            try {
-                var formData = new FormData();
-                formData.append('name', name);
-                formData.append('shortcut', shortcut);
-                formData.append('content', content);
-                
-                var response = await fetch('api.php?action=addSignature', {
-                    method: 'POST',
-                    body: formData
-                });
-                var result = await response.json();
-                
-                if (result.success) {
-                    loadPage('settings');
-                } else {
-                    alert(result.error || 'Error adding signature');
-                }
-            } catch (err) {
-                alert('Error: ' + err.message);
-            }
-        }
-        
-        async function deleteSignature(index) {
-            if (!confirm('Delete this signature?')) return;
-            
-            try {
-                var response = await fetch('api.php?action=deleteSignature&index=' + index);
-                var result = await response.json();
-                
-                if (result.success) {
-                    loadPage('settings');
-                } else {
-                    alert(result.error || 'Error deleting signature');
-                }
-            } catch (err) {
-                alert('Error: ' + err.message);
-            }
-        }
-        
-        window.addEventListener('load', function() {
-            var savedPage = sessionStorage.getItem('mailer_page') || 'inbox';
-            loadPage(savedPage);
-        });
-    </script>
-</body>
-</html>
+        header('Location: inbox.php');
+        exit;

@@ -130,22 +130,35 @@ function authenticate($socket, $username, $password, $methods)
     return $result;
 }
 
-function sendEmail($to, $subject, $body)
+function getCryptoMethod()
 {
-    $config = getUserConfig();
-    $senderName = $config['senderName'] ?: SMTP_USER;
-    $from = SMTP_FROM ?: SMTP_USER;
+    $method = 0;
+    if (defined('STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT')) {
+        $method |= STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT;
+    }
+    if (defined('STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT')) {
+        $method |= STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT;
+    }
+    if ($method === 0 && defined('STREAM_CRYPTO_METHOD_TLS_CLIENT')) {
+        $method = STREAM_CRYPTO_METHOD_TLS_CLIENT;
+    }
+    return $method;
+}
 
+function sendEmailInternal($to, $subject, $body, $senderName, $from, $port)
+{
     $host = SMTP_HOST;
-    $port = SMTP_PORT;
-
     $protocol = ($port === 465) ? 'ssl' : 'tcp';
+    $cryptoMethod = getCryptoMethod();
 
     $context = stream_context_create([
         'ssl' => [
             'verify_peer' => false,
             'verify_peer_name' => false,
-            'allow_self_signed' => true
+            'allow_self_signed' => true,
+            'peer_name' => $host,
+            'SNI_enabled' => true,
+            'crypto_method' => $cryptoMethod
         ]
     ]);
 
@@ -164,15 +177,15 @@ function sendEmail($to, $subject, $body)
         return ['success' => false, 'error' => 'SMTP connection failed: ' . $response];
     }
 
-    $clientHost = 'localhost';
-    if (!empty($_SERVER['SERVER_NAME'])) {
+    $clientHost = SMTP_HOST;
+    if (!empty($_SERVER['SERVER_NAME']) && $_SERVER['SERVER_NAME'] !== 'localhost') {
         $clientHost = $_SERVER['SERVER_NAME'];
     } elseif (!empty($_SERVER['SERVER_ADDR'])) {
         $clientHost = $_SERVER['SERVER_ADDR'];
     } elseif (function_exists('gethostname')) {
-        $host = gethostname();
-        if (!empty($host)) {
-            $clientHost = $host;
+        $serverHost = gethostname();
+        if (!empty($serverHost)) {
+            $clientHost = $serverHost;
         }
     }
 
@@ -184,8 +197,10 @@ function sendEmail($to, $subject, $body)
             return ['success' => false, 'error' => 'EHLO/HELO failed: ' . $response];
         }
         $capabilities = [];
+        $ehloResponse = $response;
     } else {
         $capabilities = parseEhloCapabilities($response);
+        $ehloResponse = $response;
     }
 
     if ($port === 587) {
@@ -195,7 +210,7 @@ function sendEmail($to, $subject, $body)
             return ['success' => false, 'error' => 'STARTTLS failed: ' . $response];
         }
 
-        if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+        if (!stream_socket_enable_crypto($socket, true, $cryptoMethod)) {
             fclose($socket);
             return ['success' => false, 'error' => 'TLS encryption failed'];
         }
@@ -206,9 +221,19 @@ function sendEmail($to, $subject, $body)
             return ['success' => false, 'error' => 'EHLO after STARTTLS failed: ' . $response];
         }
         $capabilities = parseEhloCapabilities($response);
+        $ehloResponse = $response;
     }
 
     $methods = getAuthMethods($capabilities);
+    if (empty($methods)) {
+        fclose($socket);
+        $ehloLine = trim(preg_replace('/\s+/', ' ', $ehloResponse));
+        return [
+            'success' => false,
+            'error' => 'AUTH not advertised by server. EHLO: ' . $ehloLine,
+            'reason' => 'no_auth'
+        ];
+    }
     $authResult = authenticate($socket, SMTP_USER, SMTP_PASS, $methods);
     if (!$authResult['success']) {
         fclose($socket);
@@ -229,6 +254,10 @@ function sendEmail($to, $subject, $body)
 
     fwrite($socket, "MAIL FROM:<$from>\r\n");
     $response = fgets($socket, 512);
+    if (substr($response, 0, 3) !== '250') {
+        fclose($socket);
+        return ['success' => false, 'error' => 'MAIL FROM rejected: ' . $response];
+    }
 
     fwrite($socket, "RCPT TO:<$to>\r\n");
     $response = fgets($socket, 512);
@@ -239,6 +268,10 @@ function sendEmail($to, $subject, $body)
 
     fwrite($socket, "DATA\r\n");
     $response = fgets($socket, 512);
+    if (substr($response, 0, 3) !== '354') {
+        fclose($socket);
+        return ['success' => false, 'error' => 'DATA command rejected: ' . $response];
+    }
 
     fwrite($socket, $headers . "\r\n" . $body . "\r\n.\r\n");
     $response = fgets($socket, 512);
@@ -251,4 +284,32 @@ function sendEmail($to, $subject, $body)
     fclose($socket);
 
     return ['success' => true];
+}
+
+function sendEmail($to, $subject, $body)
+{
+    $config = getUserConfig();
+    $senderName = $config['senderName'] ?: SMTP_USER;
+    $from = SMTP_FROM ?: SMTP_USER;
+
+    $result = sendEmailInternal($to, $subject, $body, $senderName, $from, SMTP_PORT);
+    if (!empty($result['success'])) {
+        return ['success' => true];
+    }
+
+    $reason = $result['reason'] ?? '';
+    if ($reason === 'no_auth' && (SMTP_PORT === 465 || SMTP_PORT === 587)) {
+        $fallbackPort = SMTP_PORT === 465 ? 587 : 465;
+        $fallback = sendEmailInternal($to, $subject, $body, $senderName, $from, $fallbackPort);
+        if (!empty($fallback['success'])) {
+            return ['success' => true];
+        }
+        $fallbackError = $fallback['error'] ?? 'Unknown error';
+        return [
+            'success' => false,
+            'error' => 'AUTH not advertised on port ' . SMTP_PORT . '. Fallback port ' . $fallbackPort . ' failed: ' . $fallbackError
+        ];
+    }
+
+    return ['success' => false, 'error' => $result['error'] ?? 'Send failed'];
 }

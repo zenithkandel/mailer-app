@@ -2,62 +2,60 @@
 require_once __DIR__ . '/config.php';
 
 if (isLoggedIn()) {
-    header('Location: dashboard.php');
+    header('Location: inbox.php');
     exit;
 }
 
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $user = $_POST['username'] ?? '';
+    $user = trim($_POST['username'] ?? '');
     $pass = $_POST['password'] ?? '';
-    
-    if ($user === IMAP_USER && $pass === IMAP_PASS) {
+
+    if ($user === ADMIN_EMAIL && $pass === ADMIN_PASS) {
         $_SESSION['user'] = $user;
-        header('Location: dashboard.php');
+        header('Location: inbox.php');
         exit;
-    } else {
-        $error = 'Invalid credentials';
     }
+
+    $error = 'Invalid credentials';
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Webmail</title>
+    <title>Login - Mail</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://zenithkandel.com.np/fontawesome/zenith-icons.js"></script>
 </head>
-<body>
-    <div class="login-container">
-        <div class="login-box">
-            <div class="login-header">
-                <i class="fa-sharp-duotone fa-thin fa-envelope"></i>
-                <h1>Webmail</h1>
-            </div>
-            
+
+<body class="auth-body">
+    <div class="auth-wrap">
+        <div class="auth-card glass">
+            <div class="auth-brand">Mail</div>
+            <div class="auth-sub">Sign in to your mailbox</div>
+
             <?php if ($error): ?>
-                <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
+                <div class="alert alert-error"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div>
             <?php endif; ?>
-            
-            <form method="post">
-                <div class="form-group">
-                    <label for="username">Email</label>
-                    <input type="text" id="username" name="username" required placeholder="your@email.com">
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="Password">
-                </div>
-                
-                <button type="submit" class="btn btn-primary btn-block">
-                    <i class="fa-sharp-duotone fa-thin fa-right-to-bracket"></i> Login
-                </button>
+
+            <form method="post" class="auth-form">
+                <label class="field">
+                    <span>Email</span>
+                    <input type="email" name="username" required placeholder="admin@zenithkandel.com.np">
+                </label>
+
+                <label class="field">
+                    <span>Password</span>
+                    <input type="password" name="password" required placeholder="Your password">
+                </label>
+
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
             </form>
         </div>
     </div>
 </body>
+
 </html>
