@@ -1,43 +1,38 @@
 <?php
 session_start();
 
-define('SMTP_HOST', 'mail.zenithkandel.com.np');
-define('SMTP_PORT', 465);
-define('SMTP_USER', 'admin@zenithkandel.com.np');
-define('SMTP_PASS', '8038@Zenith');
-define('SMTP_FROM', 'admin@zenithkandel.com.np');
-
-define('IMAP_HOST', 'mail.zenithkandel.com.np');
+define('IMAP_HOST', 'mail.yourdomain.com');
 define('IMAP_PORT', 993);
-define('IMAP_USER', 'admin@zenithkandel.com.np');
-define('IMAP_PASS', '8038@Zenith');
+define('IMAP_USER', 'your-email@yourdomain.com');
+define('IMAP_PASS', 'your-password');
 
-define('ADMIN_EMAIL', 'admin@zenithkandel.com.np');
-define('ADMIN_PASS', '8038@Zenith');
+define('SMTP_HOST', 'mail.yourdomain.com');
+define('SMTP_PORT', 587);
+define('SMTP_USER', 'your-email@yourdomain.com');
+define('SMTP_PASS', 'your-password');
 
-define('SENT_LOG_FILE', __DIR__ . '/sent_log.json');
-define('USER_CONFIG_FILE', __DIR__ . '/user_config.json');
+define('CONFIG_FILE', __DIR__ . '/user_config.json');
 
-function getUserConfig() {
-    if (file_exists(USER_CONFIG_FILE)) {
-        return json_decode(file_get_contents(USER_CONFIG_FILE), true) ?: [];
-    }
-    return ['senderName' => '', 'signatures' => []];
+function isLoggedIn() {
+    return isset($_SESSION['user']) && !empty($_SESSION['user']);
 }
 
-function saveUserConfig($config) {
-    file_put_contents(USER_CONFIG_FILE, json_encode($config, JSON_PRETTY_PRINT));
-}
-
-function isLoggedIn()
-{
-    return isset($_SESSION['user']) && $_SESSION['user'] === ADMIN_EMAIL;
-}
-
-function requireLogin()
-{
+function requireLogin() {
     if (!isLoggedIn()) {
         header('Location: index.php');
         exit;
     }
+}
+
+function getUserConfig() {
+    if (!file_exists(CONFIG_FILE)) {
+        return ['senderName' => '', 'signatures' => []];
+    }
+    $content = file_get_contents(CONFIG_FILE);
+    $config = json_decode($content, true);
+    return $config ?: ['senderName' => '', 'signatures' => []];
+}
+
+function saveUserConfig($config) {
+    return file_put_contents(CONFIG_FILE, json_encode($config, JSON_PRETTY_PRINT)) !== false;
 }

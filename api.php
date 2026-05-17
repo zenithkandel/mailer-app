@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/imap.php';
 require_once __DIR__ . '/smtp.php';
@@ -52,7 +53,7 @@ if ($action === 'saveSettings') {
     $config['senderName'] = $senderName;
     
     $success = saveUserConfig($config);
-    echo json_encode(['success' => $success, 'error' => $success ? '' : 'Failed to save']);
+    echo json_encode(['success' => $success]);
     exit;
 }
 
@@ -72,7 +73,7 @@ if ($action === 'addSignature') {
     $config['signatures'] = $signatures;
     
     $success = saveUserConfig($config);
-    echo json_encode(['success' => $success, 'error' => $success ? '' : 'Failed to save']);
+    echo json_encode(['success' => $success]);
     exit;
 }
 
@@ -86,7 +87,7 @@ if ($action === 'deleteSignature') {
         array_splice($signatures, $index, 1);
         $config['signatures'] = $signatures;
         $success = saveUserConfig($config);
-        echo json_encode(['success' => $success, 'error' => $success ? '' : 'Failed to save']);
+        echo json_encode(['success' => $success]);
     } else {
         echo json_encode(['success' => false, 'error' => 'Invalid index']);
     }

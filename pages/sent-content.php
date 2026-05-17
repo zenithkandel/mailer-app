@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../imap.php';
 
@@ -17,7 +18,7 @@ function getInitials($name) {
     return $initials ?: '?';
 }
 
-function formatDateJS($timestamp) {
+function formatDateJson($timestamp) {
     return date('Y-m-d H:i:s', $timestamp);
 }
 ?>
@@ -25,7 +26,9 @@ function formatDateJS($timestamp) {
 <div class="page-header">
     <h2 class="page-title"><i class="fa-sharp-duotone fa-thin fa-paper-plane"></i> Sent</h2>
     <div class="page-actions">
-        <button class="btn-icon" onclick="refreshSent()" title="Refresh"><i class="fa-sharp-duotone fa-thin fa-rotate-right"></i></button>
+        <button class="btn-icon" onclick="refreshSent()" title="Refresh">
+            <i class="fa-sharp-duotone fa-thin fa-rotate-right"></i>
+        </button>
     </div>
 </div>
 
@@ -44,7 +47,7 @@ function formatDateJS($timestamp) {
                     <span class="email-subject"><?php echo htmlspecialchars($email['subject']); ?></span>
                 </div>
                 <div class="email-meta">
-                    <span class="email-date" data-date="<?php echo formatDateJS($email['date']); ?>"></span>
+                    <span class="email-date" data-date="<?php echo formatDateJson($email['date']); ?>"></span>
                 </div>
             </a>
         <?php endforeach; ?>
@@ -53,7 +56,7 @@ function formatDateJS($timestamp) {
 
 <script>
 function refreshSent() {
-    document.getElementById('content-frame').contentWindow.location.reload();
+    document.getElementById('content-frame').src = 'pages/sent-content.php';
 }
 
 function openEmail(uid, from) {
@@ -61,14 +64,14 @@ function openEmail(uid, from) {
 }
 
 function formatDates() {
-    document.querySelectorAll('.email-date').forEach(el => {
-        const date = new Date(el.dataset.date);
-        const now = new Date();
-        const diff = now - date;
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    document.querySelectorAll('.email-date').forEach(function(el) {
+        var date = new Date(el.dataset.date);
+        var now = new Date();
+        var diff = now - date;
+        var days = Math.floor(diff / (1000 * 60 * 60 * 24));
         
         if (days === 0) {
-            el.textContent = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            el.textContent = date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
         } else if (days === 1) {
             el.textContent = 'Yesterday';
         } else if (days < 7) {

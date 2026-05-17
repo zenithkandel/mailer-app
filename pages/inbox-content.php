@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../imap.php';
 
@@ -18,7 +19,7 @@ function getInitials($name) {
     return $initials ?: '?';
 }
 
-function formatDateJS($timestamp) {
+function formatDateJson($timestamp) {
     return date('Y-m-d H:i:s', $timestamp);
 }
 ?>
@@ -26,10 +27,11 @@ function formatDateJS($timestamp) {
 <div class="page-header">
     <h2 class="page-title"><i class="fa-sharp-duotone fa-thin fa-inbox"></i> Inbox</h2>
     <div class="page-actions">
-        <button class="btn-icon" onclick="refreshInbox()" title="Refresh"><i class="fa-sharp-duotone fa-thin fa-rotate-right"></i></button>
+        <button class="btn-icon" onclick="refreshInbox()" title="Refresh">
+            <i class="fa-sharp-duotone fa-thin fa-rotate-right"></i>
+        </button>
     </div>
 </div>
-<span class="unread-count" style="display:none"><?php echo $unreadCount; ?></span>
 
 <script>
 window.addEventListener('load', function() {
@@ -49,13 +51,13 @@ window.addEventListener('load', function() {
                 <div class="email-avatar"><?php echo getInitials($email['from_name']); ?></div>
                 <div class="email-content">
                     <span class="email-sender">
-                        <?php echo $email['read'] ? '' : '<span class="unread-dot"></span>'; ?>
+                        <?php if (!$email['read']): ?><span class="unread-dot"></span><?php endif; ?>
                         <?php echo htmlspecialchars($email['from_name']); ?>
                     </span>
                     <span class="email-subject"><?php echo htmlspecialchars($email['subject']); ?></span>
                 </div>
                 <div class="email-meta">
-                    <span class="email-date" data-date="<?php echo formatDateJS($email['date']); ?>"></span>
+                    <span class="email-date" data-date="<?php echo formatDateJson($email['date']); ?>"></span>
                 </div>
             </a>
         <?php endforeach; ?>
@@ -64,7 +66,7 @@ window.addEventListener('load', function() {
 
 <script>
 function refreshInbox() {
-    document.getElementById('content-frame').contentWindow.location.reload();
+    document.getElementById('content-frame').src = 'pages/inbox-content.php';
 }
 
 function openEmail(uid, from) {
@@ -72,14 +74,14 @@ function openEmail(uid, from) {
 }
 
 function formatDates() {
-    document.querySelectorAll('.email-date').forEach(el => {
-        const date = new Date(el.dataset.date);
-        const now = new Date();
-        const diff = now - date;
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    document.querySelectorAll('.email-date').forEach(function(el) {
+        var date = new Date(el.dataset.date);
+        var now = new Date();
+        var diff = now - date;
+        var days = Math.floor(diff / (1000 * 60 * 60 * 24));
         
         if (days === 0) {
-            el.textContent = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            el.textContent = date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
         } else if (days === 1) {
             el.textContent = 'Yesterday';
         } else if (days < 7) {

@@ -9,15 +9,15 @@ if (isLoggedIn()) {
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-
-    if ($email === ADMIN_EMAIL && $password === ADMIN_PASS) {
-        $_SESSION['user'] = $email;
+    $user = $_POST['username'] ?? '';
+    $pass = $_POST['password'] ?? '';
+    
+    if ($user === IMAP_USER && $pass === IMAP_PASS) {
+        $_SESSION['user'] = $user;
         header('Location: dashboard.php');
         exit;
     } else {
-        $error = 'Invalid email or password';
+        $error = 'Invalid credentials';
     }
 }
 ?>
@@ -26,42 +26,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Mail App</title>
+    <title>Login - Webmail</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://zenithkandel.com.np/fontawesome/zenith-icons.js"></script>
-    <style>
-        .login-page { display: block; }
-        .app-layout { display: none; }
-    </style>
 </head>
 <body>
-    <?php if (!isLoggedIn()): ?>
-    <div class="login-page">
-        <div class="login-card">
-            <div class="login-logo">
-                <i class="fa-sharp-duotone fa-thin fa-envelope"></i> Mail
-                <span>Sign in to your account</span>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <i class="fa-sharp-duotone fa-thin fa-envelope"></i>
+                <h1>Webmail</h1>
             </div>
-
-            <div class="login-error <?php echo $error ? 'show' : ''; ?>">
-                <i class="fa-sharp-duotone fa-thin fa-circle-exclamation"></i> <?php echo htmlspecialchars($error); ?>
-            </div>
-
-            <form method="POST" action="">
+            
+            <?php if ($error): ?>
+                <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
+            
+            <form method="post">
                 <div class="form-group">
-                    <label for="email"><i class="fa-sharp-duotone fa-thin fa-user"></i> Email Address</label>
-                    <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                    <label for="username">Email</label>
+                    <input type="text" id="username" name="username" required placeholder="your@email.com">
                 </div>
-
+                
                 <div class="form-group">
-                    <label for="password"><i class="fa-sharp-duotone fa-thin fa-lock"></i> Password</label>
-                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Password">
                 </div>
-
-                <button type="submit" class="btn btn-primary"><i class="fa-sharp-duotone fa-thin fa-right-to-bracket"></i> Sign In</button>
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fa-sharp-duotone fa-thin fa-right-to-bracket"></i> Login
+                </button>
             </form>
         </div>
     </div>
-    <?php endif; ?>
 </body>
 </html>

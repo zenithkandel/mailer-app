@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../imap.php';
 
@@ -40,9 +41,12 @@ function formatDateFull($timestamp) {
 <div class="page-header">
     <h2 class="page-title"><i class="fa-sharp-duotone fa-thin fa-envelope-open"></i> Read Email</h2>
     <div class="page-actions">
-        <button class="btn-icon" onclick="goBack('<?php echo htmlspecialchars($from); ?>')" title="Back"><i class="fa-sharp-duotone fa-thin fa-arrow-left"></i></button>
-        <button class="btn-icon" onclick="deleteEmail(<?php echo $uid; ?>, '<?php echo htmlspecialchars($from); ?>')" title="Delete"><i class="fa-sharp-duotone fa-thin fa-trash"></i></button>
-        <button class="btn-icon" onclick="replyToEmail()" title="Reply"><i class="fa-sharp-duotone fa-thin fa-reply"></i></button>
+        <button class="btn-icon" onclick="goBack('<?php echo htmlspecialchars($from); ?>')" title="Back">
+            <i class="fa-sharp-duotone fa-thin fa-arrow-left"></i>
+        </button>
+        <button class="btn-icon" onclick="deleteEmail(<?php echo $uid; ?>, '<?php echo htmlspecialchars($from); ?>')" title="Delete">
+            <i class="fa-sharp-duotone fa-thin fa-trash"></i>
+        </button>
     </div>
 </div>
 
@@ -68,20 +72,14 @@ function formatDateFull($timestamp) {
         <h4><i class="fa-sharp-duotone fa-thin fa-paperclip"></i> Attachments</h4>
         <div class="attachment-list">
             <?php foreach ($email['attachments'] as $att): ?>
-                <a href="pages/download-attachment.php?uid=<?php echo $uid; ?>&part=<?php echo $att['part']; ?>" class="attachment-item" target="_top">
+                <span class="attachment-item">
                     <i class="fa-sharp-duotone fa-thin fa-file"></i>
                     <?php echo htmlspecialchars($att['name']); ?>
-                </a>
+                </span>
             <?php endforeach; ?>
         </div>
     </div>
     <?php endif; ?>
-    
-    <div class="email-actions" style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
-        <button class="btn btn-primary" onclick="replyToEmail()">
-            <i class="fa-sharp-duotone fa-thin fa-reply"></i> Reply
-        </button>
-    </div>
 </div>
 
 <script>
@@ -91,19 +89,15 @@ function goBack(from) {
 
 function deleteEmail(uid, from) {
     if (!confirm('Delete this email?')) return;
-    fetch('api.php?action=delete&uid=' + uid).then(() => {
+    fetch('../api.php?action=delete&uid=' + uid).then(function() {
         goBack(from);
     });
 }
 
-function replyToEmail() {
-    document.getElementById('content-frame').src = 'pages/compose-content.php?replyto=<?php echo urlencode($email['from_email']); ?>&subject=Re: <?php echo urlencode($email['subject']); ?>';
-}
-
 function formatFullDate() {
-    const el = document.querySelector('.email-header-date');
+    var el = document.querySelector('.email-header-date');
     if (el) {
-        const date = new Date(el.dataset.date);
+        var date = new Date(el.dataset.date);
         el.textContent = date.toLocaleString();
     }
 }

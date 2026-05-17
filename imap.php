@@ -2,119 +2,244 @@
 
 require_once __DIR__ . '/config.php';
 
-function safe_qprint($data) {
-    if ($data === false || $data === null) return '';
-    $prev = set_error_handler(function ($errno, $errstr) { return true; });
-    $decoded = imap_qprint($data);
-    if ($prev !== null) { set_error_handler($prev); } else { restore_error_handler(); }
-    return $decoded === false ? quoted_printable_decode($data) : $decoded;
-}
+define('OP_READONLY', 0);
 
-function imapConnect($folder = 'INBOX')
-{
+function imapConnect($folder = 'INBOX') {
     $host = '{' . IMAP_HOST . ':' . IMAP_PORT . '/ssl}' . $folder;
     $connection = @imap_open($host, IMAP_USER, IMAP_PASS, OP_READONLY);
-
+    
     if (!$connection) {
         return null;
     }
-
     return $connection;
 }
 
-function getUnreadCount($folder = 'INBOX')
-{
+function getUnreadCount($folder = 'INBOX') {
     $connection = imapConnect($folder);
     if (!$connection) {
         return 0;
     }
-
-    $search = imap_search($connection, 'UNSEEN');
+    
+    $search = @imap_search($connection, 'UNSEEN');
     $count = $search ? count($search) : 0;
-    imap_close($connection);
-
+    @imap_close($connection);
+    
     return $count;
 }
 
-function fetchEmails($folder = 'INBOX', $limit = 50, $start = 0)
-{
+function safeQprint($data) {
+    if ($data === false || $data === null) {
+        return '';
+    }
+    $prev = set_error_handler(function ($errno, $errstr) {
+        return true;
+    });
+    $decoded = @imap_qprint($data);
+    if ($prev !== null) {
+        set_error_handler($prev);
+    } else {
+        restore_error_handler();
+    }
+    return $decoded === false ? quoted_printable_decode($data) : $decoded;
+}
+
+function fetchEmails($folder = 'INBOX', $limit = 50) {
     $connection = imapConnect($folder);
     if (!$connection) {
         return [];
     }
-
+    
     $emails = [];
-    $total = imap_num_msg($connection);
-
+    $total = @imap_num_msg($connection);
+    
     if ($total === 0) {
-        imap_close($connection);
+        @imap_close($connection);
         return [];
     }
-
-    $startNum = max(1, $total - $start);
-    $endNum = max(1, $total - $start - $limit + 1);
-
-    for ($i = $startNum; $i >= $endNum; $i--) {
-        $header = imap_headerinfo($connection, $i);
-        if (!$header)
+    
+    $startNum = max(1, $total - $limit + 1);
+    $endNum = $total;
+    
+    for ($i = $endNum; $i >= $startNum; $i--) {
+        $header = @imap_headerinfo($connection, $i);
+        if (!$header) {
             continue;
-
-        $overview = imap_fetch_overview($connection, $i, 0);
-
+        }
+        
+        $overview = @imap_fetch_overview($connection, $i, 0);
+        
         $from = isset($header->from[0]) ? $header->from[0] : null;
         $senderName = $from ? (isset($from->personal) ? $from->personal : $from->mailbox) : 'Unknown';
         $senderEmail = $from ? ($from->mailbox . '@' . $from->host) : '';
-
-        $subject = isset($header->subject) ? imap_mime_header_decode($header->subject) : '';
-        $subject = is_array($subject) ? implode('', array_map(function ($s) {
-            return $s->text;
-        }, $subject)) : $subject;
-
+        
+        $subject = isset($header->subject) ? @imap_mime_header_decode($header->subject) : '';
+        if (is_array($subject)) {
+            $subject = implode('', array_map(function ($s) {
+                return $s->text;
+            }, $subject));
+        }
+        
         $date = isset($header->udate) ? $header->udate : time();
         $read = isset($overview[0]->seen) && $overview[0]->seen == 1;
-
-        $preview = '';
-        $body = @imap_fetchbody($connection, $i, '1');
-        if ($body) {
-            $body = safe_qprint($body);
-            $preview = substr(strip_tags($body), 0, 100);
-        }
-
-        $header = imap_headerinfo($connection, $i);
-        $uid = isset($header->uid) ? $header->uid : $i;
-
+        
+        $uid = @imap_msg_uid($connection, $i);
+        
         $emails[] = [
-            'uid' => $uid,
+            'uid' => $uid ?: $i,
             'msgnum' => $i,
             'from_name' => $senderName,
             'from_email' => $senderEmail,
             'subject' => $subject ?: '(No Subject)',
             'date' => $date,
-            'read' => $read,
-            'preview' => $preview
+            'read' => $read
         ];
     }
-
-    imap_close($connection);
+    
+    @imap_close($connection);
     return $emails;
 }
 
-function searchEmails($query, $folder = 'INBOX', $limit = 50)
-{
+function getEmailByUid($uid) {
+    $connection = imapConnect();
+    if (!$connection) {
+        return null;
+    }
+    
+    $msgnum = @imap_msgno($connection, $uid);
+    if (!$msgnum) {
+        @imap_close($connection);
+        return null;
+    }
+    
+    $header = @imap_headerinfo($connection, $msgnum);
+    $overview = @imap_fetch_overview($connection, $msgnum, 0);
+    $structure = @imap_fetchstructure($connection, $msgnum);
+    
+    if (!$header) {
+        @imap_close($connection);
+        return null;
+    }
+    
+    $from = isset($header->from[0]) ? $header->from[0] : null;
+    $senderName = $from ? (isset($from->personal) ? $from->personal : $from->mailbox) : 'Unknown';
+    $senderEmail = $from ? ($from->mailbox . '@' . $from->host) : '';
+    
+    $subject = isset($header->subject) ? @imap_mime_header_decode($header->subject) : '';
+    if (is_array($subject)) {
+        $subject = implode('', array_map(function ($s) {
+            return $s->text;
+        }, $subject));
+    }
+    
+    $date = isset($header->udate) ? $header->udate : time();
+    
+    $body = '';
+    $html = '';
+    $attachments = [];
+    
+    if (isset($structure->parts)) {
+        foreach ($structure->parts as $partNum => $part) {
+            if ($part->type == 0 && $part->subtype == 'PLAIN') {
+                $body = @imap_fetchbody($connection, $msgnum, $partNum + 1);
+                $body = safeQprint($body);
+            } elseif ($part->type == 0 && $part->subtype == 'HTML') {
+                $html = @imap_fetchbody($connection, $msgnum, $partNum + 1);
+                $html = safeQprint($html);
+            } elseif ($part->type >= 2) {
+                $attachment = getAttachment($connection, $msgnum, $partNum + 1, $part);
+                if ($attachment) {
+                    $attachments[] = $attachment;
+                }
+            }
+        }
+    }
+    
+    if (!$body && !$html) {
+        $body = @imap_fetchbody($connection, $msgnum, '1');
+        $body = safeQprint($body);
+    }
+    
+    @imap_close($connection);
+    
+    return [
+        'uid' => $uid,
+        'from_name' => $senderName,
+        'from_email' => $senderEmail,
+        'subject' => $subject ?: '(No Subject)',
+        'date' => $date,
+        'body' => $html ?: nl2br(htmlspecialchars($body)),
+        'attachments' => $attachments
+    ];
+}
+
+function getAttachment($connection, $msgnum, $partNum, $part) {
+    $filename = isset($part->dparameters[0]->attribute) ? $part->dparameters[0]->value : '';
+    if (!$filename && isset($part->parameters[0]->attribute)) {
+        $filename = $part->parameters[0]->value;
+    }
+    
+    if (!$filename) {
+        return null;
+    }
+    
+    return [
+        'name' => $filename,
+        'part' => $partNum,
+        'type' => $part->type,
+        'subtype' => $part->subtype
+    ];
+}
+
+function markAsRead($uid) {
+    $connection = imapConnect();
+    if (!$connection) {
+        return false;
+    }
+    
+    $msgnum = @imap_msgno($connection, $uid);
+    if (!$msgnum) {
+        @imap_close($connection);
+        return false;
+    }
+    
+    @imap_setflag_full($connection, $msgnum, '\\Seen');
+    @imap_close($connection);
+    return true;
+}
+
+function deleteEmail($uid) {
+    $connection = imapConnect();
+    if (!$connection) {
+        return false;
+    }
+    
+    $msgnum = @imap_msgno($connection, $uid);
+    if (!$msgnum) {
+        @imap_close($connection);
+        return false;
+    }
+    
+    @imap_delete($connection, $msgnum);
+    @imap_expunge($connection);
+    @imap_close($connection);
+    return true;
+}
+
+function searchEmails($query, $folder = 'INBOX', $limit = 50) {
     $connection = imapConnect($folder);
     if (!$connection) {
         return [];
     }
     
     $emails = [];
-    $search = imap_search($connection, 'ALL');
+    $search = @imap_search($connection, 'ALL');
     
     if (!$search) {
-        imap_close($connection);
+        @imap_close($connection);
         return [];
     }
     
-    $search = array_slice($search, 0, $limit);
+    $search = array_slice($search, 0, $limit * 3);
     
     foreach ($search as $msgnum) {
         $header = @imap_headerinfo($connection, $msgnum);
@@ -126,13 +251,12 @@ function searchEmails($query, $folder = 'INBOX', $limit = 50)
         $senderName = $from ? (isset($from->personal) ? $from->personal : $from->mailbox) : 'Unknown';
         $senderEmail = $from ? ($from->mailbox . '@' . $from->host) : '';
         
-        $subject = isset($header->subject) ? imap_mime_header_decode($header->subject) : '';
-        $subject = is_array($subject) ? implode('', array_map(function ($s) {
-            return $s->text;
-        }, $subject)) : $subject;
-        
-        $date = isset($header->udate) ? $header->udate : time();
-        $read = isset($overview[0]->seen) && $overview[0]->seen == 1;
+        $subject = isset($header->subject) ? @imap_mime_header_decode($header->subject) : '';
+        if (is_array($subject)) {
+            $subject = implode('', array_map(function ($s) {
+                return $s->text;
+            }, $subject));
+        }
         
         $q = strtolower($query);
         if (strpos(strtolower($senderName), $q) === false &&
@@ -141,7 +265,12 @@ function searchEmails($query, $folder = 'INBOX', $limit = 50)
             continue;
         }
         
+        $date = isset($header->udate) ? $header->udate : time();
+        $read = isset($overview[0]->seen) && $overview[0]->seen == 1;
+        
         $uid = @imap_msg_uid($connection, $msgnum);
+        
+        if (count($emails) >= $limit) break;
         
         $emails[] = [
             'uid' => $uid ?: $msgnum,
@@ -154,245 +283,6 @@ function searchEmails($query, $folder = 'INBOX', $limit = 50)
         ];
     }
     
-    imap_close($connection);
+    @imap_close($connection);
     return $emails;
-}
-
-function fetchEmailByUid($uid)
-{
-    $connection = imapConnect();
-    if (!$connection) {
-        return null;
-    }
-
-    $msgnum = imap_msgno($connection, $uid);
-    if (!$msgnum) {
-        imap_close($connection);
-        return null;
-    }
-
-    $header = imap_headerinfo($connection, $msgnum);
-    $structure = imap_fetchstructure($connection, $msgnum);
-
-    $from = isset($header->from[0]) ? $header->from[0] : null;
-    $to = isset($header->to[0]) ? $header->to[0] : null;
-
-    $fromName = $from ? (isset($from->personal) ? $from->personal : '') : '';
-    $fromEmail = $from ? ($from->mailbox . '@' . $from->host) : '';
-
-    $toName = $to ? (isset($to->personal) ? $to->personal : '') : '';
-    $toEmail = $to ? ($to->mailbox . '@' . $to->host) : '';
-
-    $subject = isset($header->subject) ? imap_mime_header_decode($header->subject) : '';
-    $subject = is_array($subject) ? implode('', array_map(function ($s) {
-        return $s->text;
-    }, $subject)) : $subject;
-
-    $date = isset($header->udate) ? $header->udate : time();
-
-    $body = '';
-    $html = '';
-    $attachments = [];
-
-    if (isset($structure->parts)) {
-        foreach ($structure->parts as $partNum => $part) {
-            if ($part->type == 0 && $part->subtype == 'PLAIN') {
-                $body = @imap_fetchbody($connection, $msgnum, $partNum + 1);
-                $body = safe_qprint($body);
-            } elseif ($part->type == 0 && $part->subtype == 'HTML') {
-                $html = @imap_fetchbody($connection, $msgnum, $partNum + 1);
-                $html = safe_qprint($html);
-            } elseif ($part->type >= 2) {
-                $attachment = getAttachment($connection, $msgnum, $partNum + 1, $part);
-                if ($attachment) {
-                    $attachments[] = $attachment;
-                }
-            }
-        }
-    }
-
-    if (!$body && !$html) {
-        $body = @imap_fetchbody($connection, $msgnum, '1');
-        $body = safe_qprint($body);
-    }
-
-    // Safely decode quoted-printable data while suppressing non-fatal notices
-    function safe_qprint($data)
-    {
-        if ($data === false || $data === null)
-            return '';
-        $prev = set_error_handler(function ($errno, $errstr) {
-            // Suppress invalid quoted-printable sequence notices
-            return true;
-        });
-        $decoded = imap_qprint($data);
-        if ($prev !== null) {
-            set_error_handler($prev);
-        } else {
-            restore_error_handler();
-        }
-        return $decoded === false ? quoted_printable_decode($data) : $decoded;
-    }
-
-    imap_close($connection);
-
-    return [
-        'uid' => $uid,
-        'from_name' => $fromName,
-        'from_email' => $fromEmail,
-        'to_name' => $toName,
-        'to_email' => $toEmail,
-        'subject' => $subject ?: '(No Subject)',
-        'date' => $date,
-        'body' => $body,
-        'html' => $html,
-        'attachments' => $attachments
-    ];
-}
-
-function getAttachment($connection, $msgnum, $partNum, $part)
-{
-    $filename = '';
-    if (isset($part->dparameters)) {
-        foreach ($part->dparameters as $param) {
-            if ($param->attribute == 'filename') {
-                $filename = $param->value;
-                break;
-            }
-        }
-    }
-
-    if (!$filename && isset($part->parameters)) {
-        foreach ($part->parameters as $param) {
-            if ($param->attribute == 'name') {
-                $filename = $param->value;
-                break;
-            }
-        }
-    }
-
-    if (!$filename) {
-        return null;
-    }
-
-    $data = imap_fetchbody($connection, $msgnum, $partNum);
-    $data = base64_decode($data);
-
-    return [
-        'filename' => $filename,
-        'size' => strlen($data),
-        'data' => $data
-    ];
-}
-
-
-function markAsRead($uid)
-{
-    $connection = imapConnect();
-    if (!$connection) {
-        return false;
-    }
-
-    $msgnum = imap_msgno($connection, $uid);
-    if (!$msgnum) {
-        imap_close($connection);
-        return false;
-    }
-
-    imap_setflag_full($connection, $msgnum, '\\Seen');
-    imap_close($connection);
-
-    return true;
-}
-
-function deleteEmail($uid)
-{
-    $connection = imapConnect();
-    if (!$connection) {
-        return false;
-    }
-
-    $msgnum = imap_msgno($connection, $uid);
-    if (!$msgnum) {
-        imap_close($connection);
-        return false;
-    }
-
-    imap_delete($connection, $msgnum);
-    imap_expunge($connection);
-    imap_close($connection);
-
-    return true;
-}
-
-function searchEmails($query, $folder = 'INBOX')
-{
-    $connection = imapConnect($folder);
-    if (!$connection) {
-        return [];
-    }
-
-    $search = imap_search($connection, 'ALL');
-    if (!$search) {
-        imap_close($connection);
-        return [];
-    }
-
-    $emails = [];
-    foreach ($search as $msgnum) {
-        $header = imap_headerinfo($connection, $msgnum);
-        if (!$header)
-            continue;
-
-        $from = isset($header->from[0]) ? $header->from[0] : null;
-        $senderEmail = $from ? ($from->mailbox . '@' . $from->host) : '';
-        $senderName = $from ? (isset($from->personal) ? $from->personal : $from->mailbox) : 'Unknown';
-
-        $subject = isset($header->subject) ? imap_mime_header_decode($header->subject) : '';
-        $subject = is_array($subject) ? implode('', array_map(function ($s) {
-            return $s->text;
-        }, $subject)) : $subject;
-
-        if (stripos($subject, $query) !== false || stripos($senderEmail, $query) !== false || stripos($senderName, $query) !== false) {
-            $overview = imap_fetch_overview($connection, $msgnum, 0);
-            $date = isset($header->udate) ? $header->udate : time();
-            $read = isset($overview[0]->seen) && $overview[0]->seen == 1;
-
-            $body = imap_fetchbody($connection, $msgnum, '1');
-            $preview = '';
-            if ($body) {
-                $body = imap_qprint($body);
-                $preview = substr(strip_tags($body), 0, 100);
-            }
-
-            $emails[] = [
-                'uid' => isset($header->uid) ? $header->uid : $msgnum,
-                'msgnum' => $msgnum,
-                'from_name' => $senderName,
-                'from_email' => $senderEmail,
-                'subject' => $subject ?: '(No Subject)',
-                'date' => $date,
-                'read' => $read,
-                'preview' => $preview
-            ];
-        }
-    }
-
-    imap_close($connection);
-    return $emails;
-}
-
-function getSentFolderConnection()
-{
-    $folders = ['INBOX.Sent', 'Sent', 'INBOX.Sent Messages', 'Sent Messages'];
-
-    foreach ($folders as $folder) {
-        $host = '{' . IMAP_HOST . ':' . IMAP_PORT . '/ssl}' . $folder;
-        $connection = @imap_open($host, IMAP_USER, IMAP_PASS, OP_READONLY);
-        if ($connection) {
-            return ['connection' => $connection, 'folder' => $folder];
-        }
-    }
-
-    return null;
 }
