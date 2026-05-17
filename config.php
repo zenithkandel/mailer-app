@@ -1,16 +1,17 @@
 <?php
 define('MAIL_HOST', 'mail.zenithkandel.com.np');
 define('MAIL_USER', 'admin@zenithkandel.com.np');
-define('MAIL_PASS', 'YOUR_PASSWORD_HERE');
+define('MAIL_PASS', '8038@Zenith');
 define('IMAP_PORT', 993);
 define('SMTP_PORT', 465);
 define('POP3_PORT', 995);
 define('SMTP_FROM', 'admin@zenithkandel.com.np');
-define('SMTP_FROM_NAME', 'WebMail User');
+define('SMTP_FROM_NAME', 'Zenith Kandel-NAMED');
 
 session_start();
 
-function isLoggedIn() {
+function isLoggedIn()
+{
     if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
         return false;
     }
@@ -21,7 +22,8 @@ function isLoggedIn() {
     return true;
 }
 
-function requireLogin() {
+function requireLogin()
+{
     if (!isLoggedIn()) {
         http_response_code(401);
         echo json_encode(['error' => 'Not authenticated']);
@@ -30,39 +32,43 @@ function requireLogin() {
     $_SESSION['last_activity'] = time();
 }
 
-function generateCsrfToken() {
+function generateCsrfToken()
+{
     if (!isset($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }
     return $_SESSION['csrf_token'];
 }
 
-function validateCsrfToken($token) {
+function validateCsrfToken($token)
+{
     return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
 }
 
-function getImapConnection($folder = '') {
+function getImapConnection($folder = '')
+{
     $mailbox = sprintf(
         '{%s:%d/imap/ssl/novalidate-cert}%s',
         MAIL_HOST,
         IMAP_PORT,
         $folder
     );
-    $imap = imap_open($mailbox, MAIL_USER, MAIL_PASS, OP_READONLY);
+    $imap = imap_open($mailbox, MAIL_USER, MAIL_PASS, 1);
     if (!$imap) {
         throw new Exception('Failed to connect to IMAP server');
     }
     return $imap;
 }
 
-function getWritableImapConnection($folder = '') {
+function getWritableImapConnection($folder = '')
+{
     $mailbox = sprintf(
         '{%s:%d/imap/ssl/novalidate-cert}%s',
         MAIL_HOST,
         IMAP_PORT,
         $folder
     );
-    $imap = imap_open($mailbox, MAIL_USER, MAIL_PASS, CL_READWRITE);
+    $imap = imap_open($mailbox, MAIL_USER, MAIL_PASS, 0);
     if (!$imap) {
         throw new Exception('Failed to connect to IMAP server');
     }

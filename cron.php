@@ -1,5 +1,10 @@
 <?php
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/vendor/autoload.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
 
 set_time_limit(300);
 
@@ -39,12 +44,6 @@ file_put_contents($draftsFile, json_encode($drafts));
 echo "Processed scheduled emails. Sent: " . count($sent) . ", Failed: " . count($failed) . "\n";
 
 function sendScheduledEmail($draft) {
-    require_once __DIR__ . '/vendor/autoload.php';
-
-    use PHPMailer\PHPMailer\PHPMailer;
-    use PHPMailer\PHPMailer\SMTP;
-    use PHPMailer\PHPMailer\Exception;
-
     $mail = new PHPMailer(true);
 
     try {
