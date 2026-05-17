@@ -119,6 +119,7 @@ requireLogin();
         async function navigate(page, params = {}) {
             currentPage = page;
             currentView = 'list';
+            sessionStorage.setItem('mailer_page', page);
             
             // Update nav
             document.querySelectorAll('.nav-item[data-page]').forEach(item => {
@@ -190,7 +191,8 @@ requireLogin();
         }
 
         // Initial load
-        navigate('inbox');
+        const savedPage = sessionStorage.getItem('mailer_page') || 'inbox';
+        navigate(savedPage);
     </script>
 </body>
 </html>

@@ -2,6 +2,14 @@
 
 require_once __DIR__ . '/config.php';
 
+function safe_qprint($data) {
+    if ($data === false || $data === null) return '';
+    $prev = set_error_handler(function ($errno, $errstr) { return true; });
+    $decoded = imap_qprint($data);
+    if ($prev !== null) { set_error_handler($prev); } else { restore_error_handler(); }
+    return $decoded === false ? quoted_printable_decode($data) : $decoded;
+}
+
 function imapConnect($folder = 'INBOX')
 {
     $host = '{' . IMAP_HOST . ':' . IMAP_PORT . '/ssl}' . $folder;
