@@ -1,8 +1,0 @@
-config.php
-data/*.json
-data/attachments/*
-vendor/
-composer.lock
-.DS_Store
-Thumbs.db
-*.log
