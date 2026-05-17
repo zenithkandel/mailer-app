@@ -2,6 +2,12 @@
 require_once '../config.php';
 requireAuth();
 
+if (!extension_loaded('imap')) {
+    http_response_code(500);
+    echo 'PHP IMAP extension is not installed';
+    exit;
+}
+
 $uid = intval($_GET['uid'] ?? 0);
 $folder = $_GET['folder'] ?? 'INBOX';
 $part = $_GET['part'] ?? '';

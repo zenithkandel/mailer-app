@@ -4,6 +4,11 @@ requireAuth();
 
 header('Content-Type: application/json');
 
+if (!extension_loaded('imap')) {
+    echo json_encode(['error' => 'PHP IMAP extension is not installed']);
+    exit;
+}
+
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 $uids = $_POST['uids'] ?? $_GET['uids'] ?? '';
 $folder = $_POST['folder'] ?? $_GET['folder'] ?? 'INBOX';

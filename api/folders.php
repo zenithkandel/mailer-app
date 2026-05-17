@@ -4,9 +4,14 @@ requireAuth();
 
 header('Content-Type: application/json');
 
+if (!extension_loaded('imap')) {
+    echo json_encode(['error' => 'PHP IMAP extension is not installed']);
+    exit;
+}
+
 $mbox = getImapConnection();
 if (!$mbox) {
-    echo json_encode(['error' => 'Cannot connect to mail server']);
+    echo json_encode(['error' => 'Cannot connect to mail server. Check IMAP credentials.']);
     exit;
 }
 

@@ -22,7 +22,7 @@ function requireAuth(): void {
     }
 }
 
-function getImapConnection(): ?resource {
+function getImapConnection() {
     if (empty($_SESSION['username']) || empty($_SESSION['password'])) {
         return null;
     }

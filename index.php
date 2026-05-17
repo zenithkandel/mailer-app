@@ -8,7 +8,9 @@ if (!empty($_SESSION['authenticated'])) {
 
 $error = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (!extension_loaded('imap')) {
+    $error = 'PHP IMAP extension is not installed. Please enable php_imap extension in php.ini and restart the server.';
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
 

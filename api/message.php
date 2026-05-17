@@ -4,6 +4,11 @@ requireAuth();
 
 header('Content-Type: application/json');
 
+if (!extension_loaded('imap')) {
+    echo json_encode(['error' => 'PHP IMAP extension is not installed']);
+    exit;
+}
+
 $uid = intval($_GET['uid'] ?? 0);
 $folder = $_GET['folder'] ?? 'INBOX';
 
@@ -43,7 +48,7 @@ $htmlBody = '';
 $attachments = [];
 $inlineImages = [];
 
-function walkStructure($mbox, $uid, $structure, $prefix = '', &$textBody, &$htmlBody, &$attachments, &$inlineImages) {
+function walkStructure($mbox, $uid, $structure, string $prefix, &$textBody, &$htmlBody, &$attachments, &$inlineImages) {
     if (!isset($structure->parts)) {
         if ($structure->type == 0) {
             if (strtolower($structure->subtype) === 'plain') {

@@ -76,6 +76,12 @@
         const data = await apiCall('api/folders.php');
         if (!data) return;
 
+        if (data.error) {
+            showToast('Error loading folders: ' + data.error, 'error');
+            console.error('Folders API error:', data.error);
+            return;
+        }
+
         const list = $('#folder-list');
         list.innerHTML = '';
 
@@ -83,10 +89,10 @@
             const item = document.createElement('div');
             item.className = 'folder-item' + (folder.name === AppState.folder ? ' active' : '');
             item.dataset.folder = folder.name;
-            item.innerHTML = html`
-                <span class="folder-name">{0}</span>
-                {1 ? `<span class="folder-count">{1}</span>` : ''}
-            `, folder.displayName, folder.unread || '');
+            const htmlContent = folder.unread
+                ? '<span class="folder-name">' + escapeHtml(folder.displayName) + '</span><span class="folder-count">' + folder.unread + '</span>'
+                : '<span class="folder-name">' + escapeHtml(folder.displayName) + '</span>';
+            item.innerHTML = htmlContent;
             item.addEventListener('click', () => selectFolder(folder.name));
             list.appendChild(item);
         });
@@ -135,6 +141,12 @@
         const data = await apiCall('api/messages.php?' + params);
         if (!data) return;
 
+        if (data.error) {
+            showToast('Error loading messages: ' + data.error, 'error');
+            console.error('Messages API error:', data.error);
+            return;
+        }
+
         showProgress(50, 'Fetching messages...');
 
         AppState.messages = data.messages || [];
@@ -161,29 +173,19 @@
             const isUnread = !msg.flags.includes('seen');
             const isSelected = AppState.selectedUids.includes(msg.uid);
             const hasFlag = msg.flags.includes('flagged');
-
-            return html`
-                <div class="message-row {0} {1}" data-uid="{2}">
-                    <input type="checkbox" class="checkbox" {3}>
-                    <div class="message-info">
-                        <div class="message-from">
-                            {4}
-                        </div>
-                        <div class="message-subject">
-                            {5}
-                        </div>
-                    </div>
-                    <div class="message-date">{6}</div>
-                </div>
-            `,
-            isUnread ? 'unread' : '',
-            isSelected ? 'selected' : '',
-            msg.uid,
-            isSelected ? 'checked' : '',
-            hasFlag ? '<span class="flag-icon">★</span>' + escapeHtml(msg.from) : escapeHtml(msg.from),
-            msg.hasAttachment ? escapeHtml(msg.subject) + '<span class="attachment-icon">📎</span>' : escapeHtml(msg.subject),
-            msg.date
-            }).join('');
+            const rowClass = (isUnread ? 'unread' : '') + (isSelected ? ' selected' : '');
+            const fromHtml = hasFlag ? '<span class="flag-icon">★</span>' + escapeHtml(msg.from) : escapeHtml(msg.from);
+            const subjectHtml = msg.hasAttachment ? escapeHtml(msg.subject) + '<span class="attachment-icon">📎</span>' : escapeHtml(msg.subject);
+            
+            return '<div class="message-row ' + rowClass + '" data-uid="' + msg.uid + '">' +
+                '<input type="checkbox" class="checkbox" ' + (isSelected ? 'checked' : '') + '>' +
+                '<div class="message-info">' +
+                '<div class="message-from">' + fromHtml + '</div>' +
+                '<div class="message-subject">' + subjectHtml + '</div>' +
+                '</div>' +
+                '<div class="message-date">' + msg.date + '</div>' +
+                '</div>';
+        }).join('');
 
         list.querySelectorAll('.message-row').forEach(row => {
             row.addEventListener('click', (e) => {
@@ -278,74 +280,41 @@
 
         let ccHtml = '';
         if (msg.cc && msg.cc.length > 0) {
-            ccHtml = html`
-                <div class="message-meta-row">
-                    <label>CC:</label>
-                    <span>{0}</span>
-                </div>
-            `, msg.cc.map(c => escapeHtml(c.name || c.email)).join(', ');
+            const ccList = msg.cc.map(c => escapeHtml(c.name || c.email)).join(', ');
+            ccHtml = '<div class="message-meta-row"><label>CC:</label><span>' + ccList + '</span></div>';
         }
 
         let attachmentsHtml = '';
         if (hasAttachments) {
-            attachmentsHtml = html`
-                <div class="message-attachments">
-                    <h4>Attachments ({0})</h4>
-                    <div class="attachment-list">
-                        {1}
-                    </div>
-                </div>
-            `, msg.attachments.length, msg.attachments.map(att => html`
-                <div class="attachment-item">
-                    <span>{0}</span>
-                    <span class="size">({1})</span>
-                    <button class="btn btn-small" onclick="downloadAttachment({2}, '{3}', '{4}')">Download</button>
-                </div>
-            `, escapeHtml(att.filename), formatBytes(att.size), msg.uid, encodeURIComponent(att.filename), att.part).join(''));
+            const attachmentItems = msg.attachments.map(att => {
+                return '<div class="attachment-item">' +
+                    '<span>' + escapeHtml(att.filename) + '</span>' +
+                    '<span class="size">(' + formatBytes(att.size) + ')</span>' +
+                    '<button class="btn btn-small" onclick="downloadAttachment(' + msg.uid + ', \'' + encodeURIComponent(att.filename) + '\', \'' + att.part + '\')">Download</button>' +
+                    '</div>';
+            }).join('');
+            attachmentsHtml = '<div class="message-attachments"><h4>Attachments (' + msg.attachments.length + ')</h4><div class="attachment-list">' + attachmentItems + '</div></div>';
         }
 
-        pane.innerHTML = html`
-            <div class="message-view">
-                <div class="message-view-header">
-                    <h2>{0}</h2>
-                    <div class="message-meta-row">
-                        <label>From:</label>
-                        <span>{1} &lt;{2}&gt;</span>
-                    </div>
-                    <div class="message-meta-row">
-                        <label>To:</label>
-                        <span>{3} &lt;{4}&gt;</span>
-                    </div>
-                    {5}
-                    <div class="message-meta-row">
-                        <label>Date:</label>
-                        <span>{6}</span>
-                    </div>
-                </div>
-                <div class="message-view-body">
-                    {7}
-                </div>
-                {8}
-                <div class="message-actions">
-                    <button class="btn btn-primary btn-small" onclick="replyMessage({9})">Reply</button>
-                    <button class="btn btn-secondary btn-small" onclick="replyAllMessage({9})">Reply All</button>
-                    <button class="btn btn-secondary btn-small" onclick="forwardMessage({9})">Forward</button>
-                    <button class="btn btn-secondary btn-small" onclick="toggleFlag({9})">{10}</button>
-                    <button class="btn btn-danger btn-small" onclick="deleteMessage({9})">Delete</button>
-                    <button class="btn btn-secondary btn-small" onclick="printMessage({9})">Print</button>
-                </div>
-            </div>
-        `,
-        escapeHtml(msg.subject),
-        escapeHtml(msg.from.name), escapeHtml(msg.from.email),
-        escapeHtml(msg.to.name), escapeHtml(msg.to.email),
-        ccHtml,
-        msg.date,
-        msg.body,
-        attachmentsHtml,
-        msg.uid,
-        msg.isFlagged ? 'Unflag' : 'Flag'
-        ];
+        pane.innerHTML = '<div class="message-view">' +
+            '<div class="message-view-header">' +
+            '<h2>' + escapeHtml(msg.subject) + '</h2>' +
+            '<div class="message-meta-row"><label>From:</label><span>' + escapeHtml(msg.from.name) + ' &lt;' + escapeHtml(msg.from.email) + '&gt;</span></div>' +
+            '<div class="message-meta-row"><label>To:</label><span>' + escapeHtml(msg.to.name) + ' &lt;' + escapeHtml(msg.to.email) + '&gt;</span></div>' +
+            ccHtml +
+            '<div class="message-meta-row"><label>Date:</label><span>' + msg.date + '</span></div>' +
+            '</div>' +
+            '<div class="message-view-body">' + msg.body + '</div>' +
+            attachmentsHtml +
+            '<div class="message-actions">' +
+            '<button class="btn btn-primary btn-small" onclick="replyMessage(' + msg.uid + ')">Reply</button>' +
+            '<button class="btn btn-secondary btn-small" onclick="replyAllMessage(' + msg.uid + ')">Reply All</button>' +
+            '<button class="btn btn-secondary btn-small" onclick="forwardMessage(' + msg.uid + ')">Forward</button>' +
+            '<button class="btn btn-secondary btn-small" onclick="toggleFlag(' + msg.uid + ')">' + (msg.isFlagged ? 'Unflag' : 'Flag') + '</button>' +
+            '<button class="btn btn-danger btn-small" onclick="deleteMessage(' + msg.uid + ')">Delete</button>' +
+            '<button class="btn btn-secondary btn-small" onclick="printMessage(' + msg.uid + ')">Print</button>' +
+            '</div>' +
+            '</div>';
     }
 
     function showMessagePane(content) {
@@ -605,11 +574,7 @@
                         const preview = $('#attachments-preview');
                         const item = document.createElement('div');
                         item.className = 'attachment-preview';
-                        item.innerHTML = html`
-                            <span>{0}</span>
-                            <span class="size">({1})</span>
-                            <span class="remove" onclick="removeAttachment(this, '{2}')">×</span>
-                        `, data.filename, formatBytes(data.size), data.path);
+                        item.innerHTML = '<span>' + escapeHtml(data.filename) + '</span><span class="size">(' + formatBytes(data.size) + ')</span><span class="remove" onclick="removeAttachment(this, \'' + data.path + '\')">×</span>';
                         preview.appendChild(item);
                     } else {
                         showToast(data.error || 'Upload failed', 'error');
