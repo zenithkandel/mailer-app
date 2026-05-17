@@ -328,6 +328,16 @@ requireLogin();
             loadPage('search', { q: q });
         }
         
+        function getInitials(name) {
+            if (!name) return '?';
+            var parts = name.trim().split(' ');
+            var initials = '';
+            for (var i = 0; i < parts.length && initials.length < 2; i++) {
+                if (parts[i]) initials += parts[i].charAt(0).toUpperCase();
+            }
+            return initials || '?';
+        }
+        
         async function saveSettings() {
             var senderName = document.getElementById('senderName').value;
             var alertDiv = document.getElementById('settingsAlert');

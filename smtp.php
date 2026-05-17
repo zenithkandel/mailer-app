@@ -7,40 +7,45 @@ function sendEmail($to, $subject, $body) {
     $senderName = $config['senderName'] ?: SMTP_USER;
     $from = SMTP_FROM ?: SMTP_USER;
     
-    $context = stream_context_create([
-        'ssl' => [
-            'verify_peer' => false,
-            'verify_peer_name' => false
-        ]
-    ]);
-    
     $host = SMTP_HOST;
     $port = SMTP_PORT;
     
-    if ($port === 465) {
-        $host = 'ssl://' . $host;
-    }
+    $protocol = ($port === 465) ? 'ssl' : 'tls';
     
-    $socket = @fsockopen($host, $port, $errno, $errstr, 30, $context);
+    $context = stream_context_create([
+        'ssl' => [
+            'verify_peer' => false,
+            'verify_peer_name' => false,
+            'allow_self_signed' => true
+        ]
+    ]);
+    
+    $url = $protocol . '://' . $host . ':' . $port;
+    $socket = @stream_socket_client($url, $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $context);
+    
     if (!$socket) {
         return ['success' => false, 'error' => "Connection failed: $errstr ($errno)"];
     }
     
+    stream_set_timeout($socket, 30);
+    
     $response = fgets($socket, 512);
     if (substr($response, 0, 3) !== '220') {
         fclose($socket);
-        return ['success' => false, 'error' => 'SMTP connection failed'];
+        return ['success' => false, 'error' => 'SMTP connection failed: ' . $response];
     }
     
     fwrite($socket, "EHLO " . SMTP_HOST . "\r\n");
-    $response = fgets($socket, 512);
+    do {
+        $response = fgets($socket, 512);
+    } while (substr($response, 3, 1) === '-');
     
     if ($port === 587) {
         fwrite($socket, "STARTTLS\r\n");
         $response = fgets($socket, 512);
         if (substr($response, 0, 3) !== '220') {
             fclose($socket);
-            return ['success' => false, 'error' => 'STARTTLS failed'];
+            return ['success' => false, 'error' => 'STARTTLS failed: ' . $response];
         }
         
         if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
@@ -49,7 +54,9 @@ function sendEmail($to, $subject, $body) {
         }
         
         fwrite($socket, "EHLO " . SMTP_HOST . "\r\n");
-        $response = fgets($socket, 512);
+        do {
+            $response = fgets($socket, 512);
+        } while (substr($response, 3, 1) === '-');
         while (substr($response, 3, 1) !== ' ') {
             $response = fgets($socket, 512);
         }
@@ -57,23 +64,28 @@ function sendEmail($to, $subject, $body) {
     
     fwrite($socket, "AUTH LOGIN\r\n");
     $response = fgets($socket, 512);
-    if (substr($response, 0, 3) !== '334') {
-        fclose($socket);
-        return ['success' => false, 'error' => 'AUTH LOGIN failed'];
-    }
     
-    fwrite($socket, base64_encode(SMTP_USER) . "\r\n");
-    $response = fgets($socket, 512);
     if (substr($response, 0, 3) !== '334') {
-        fclose($socket);
-        return ['success' => false, 'error' => 'Username failed'];
-    }
-    
-    fwrite($socket, base64_encode(SMTP_PASS) . "\r\n");
-    $response = fgets($socket, 512);
-    if (substr($response, 0, 3) !== '235') {
-        fclose($socket);
-        return ['success' => false, 'error' => 'Authentication failed'];
+        fwrite($socket, "AUTH PLAIN " . base64_encode("\0" . SMTP_USER . "\0" . SMTP_PASS) . "\r\n");
+        $response = fgets($socket, 512);
+        if (substr($response, 0, 3) !== '235') {
+            fclose($socket);
+            return ['success' => false, 'error' => 'Authentication failed: ' . $response];
+        }
+    } else {
+        fwrite($socket, base64_encode(SMTP_USER) . "\r\n");
+        $response = fgets($socket, 512);
+        if (substr($response, 0, 3) !== '334') {
+            fclose($socket);
+            return ['success' => false, 'error' => 'Username failed: ' . $response];
+        }
+        
+        fwrite($socket, base64_encode(SMTP_PASS) . "\r\n");
+        $response = fgets($socket, 512);
+        if (substr($response, 0, 3) !== '235') {
+            fclose($socket);
+            return ['success' => false, 'error' => 'Authentication failed: ' . $response];
+        }
     }
     
     $messageId = '<' . time() . '.' . rand(1000, 9999) . '@' . SMTP_HOST . '>';
@@ -85,7 +97,7 @@ function sendEmail($to, $subject, $body) {
     $headers .= "Date: $date\r\n";
     $headers .= "Message-ID: $messageId\r\n";
     $headers .= "MIME-Version: 1.0\r\n";
-    $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
     $headers .= "Content-Transfer-Encoding: 7bit\r\n";
     
     fwrite($socket, "MAIL FROM:<$from>\r\n");
@@ -95,7 +107,7 @@ function sendEmail($to, $subject, $body) {
     $response = fgets($socket, 512);
     if (substr($response, 0, 3) !== '250') {
         fclose($socket);
-        return ['success' => false, 'error' => 'Recipient rejected'];
+        return ['success' => false, 'error' => 'Recipient rejected: ' . $response];
     }
     
     fwrite($socket, "DATA\r\n");
@@ -105,7 +117,7 @@ function sendEmail($to, $subject, $body) {
     $response = fgets($socket, 512);
     if (substr($response, 0, 3) !== '250') {
         fclose($socket);
-        return ['success' => false, 'error' => 'Message sending failed'];
+        return ['success' => false, 'error' => 'Message sending failed: ' . $response];
     }
     
     fwrite($socket, "QUIT\r\n");
