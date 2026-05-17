@@ -5,9 +5,23 @@ require_once __DIR__ . '/config.php';
 function sendEmail($to, $subject, $body) {
     $config = getUserConfig();
     $senderName = $config['senderName'] ?: SMTP_USER;
-    $from = SMTP_USER;
+    $from = SMTP_FROM ?: SMTP_USER;
     
-    $socket = @fsockopen(SMTP_HOST, SMTP_PORT, $errno, $errstr, 30);
+    $context = stream_context_create([
+        'ssl' => [
+            'verify_peer' => false,
+            'verify_peer_name' => false
+        ]
+    ]);
+    
+    $host = SMTP_HOST;
+    $port = SMTP_PORT;
+    
+    if ($port === 465) {
+        $host = 'ssl://' . $host;
+    }
+    
+    $socket = @fsockopen($host, $port, $errno, $errstr, 30, $context);
     if (!$socket) {
         return ['success' => false, 'error' => "Connection failed: $errstr ($errno)"];
     }
@@ -21,21 +35,24 @@ function sendEmail($to, $subject, $body) {
     fwrite($socket, "EHLO " . SMTP_HOST . "\r\n");
     $response = fgets($socket, 512);
     
-    fwrite($socket, "STARTTLS\r\n");
-    $response = fgets($socket, 512);
-    if (substr($response, 0, 3) !== '220') {
-        fclose($socket);
-        return ['success' => false, 'error' => 'STARTTLS failed'];
-    }
-    
-    if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
-        fclose($socket);
-        return ['success' => false, 'error' => 'TLS encryption failed'];
-    }
-    
-    fwrite($socket, "EHLO " . SMTP_HOST . "\r\n");
-    while (substr($response, 3, 1) !== ' ') {
+    if ($port === 587) {
+        fwrite($socket, "STARTTLS\r\n");
         $response = fgets($socket, 512);
+        if (substr($response, 0, 3) !== '220') {
+            fclose($socket);
+            return ['success' => false, 'error' => 'STARTTLS failed'];
+        }
+        
+        if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+            fclose($socket);
+            return ['success' => false, 'error' => 'TLS encryption failed'];
+        }
+        
+        fwrite($socket, "EHLO " . SMTP_HOST . "\r\n");
+        $response = fgets($socket, 512);
+        while (substr($response, 3, 1) !== ' ') {
+            $response = fgets($socket, 512);
+        }
     }
     
     fwrite($socket, "AUTH LOGIN\r\n");

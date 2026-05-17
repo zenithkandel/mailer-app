@@ -1,15 +1,19 @@
 <?php
 session_start();
 
-define('IMAP_HOST', 'mail.yourdomain.com');
+define('IMAP_HOST', 'mail.zenithkandel.com.np');
 define('IMAP_PORT', 993);
-define('IMAP_USER', 'your-email@yourdomain.com');
-define('IMAP_PASS', 'your-password');
+define('IMAP_USER', 'admin@zenithkandel.com.np');
+define('IMAP_PASS', '8038@Zenith');
 
-define('SMTP_HOST', 'mail.yourdomain.com');
-define('SMTP_PORT', 587);
-define('SMTP_USER', 'your-email@yourdomain.com');
-define('SMTP_PASS', 'your-password');
+define('SMTP_HOST', 'mail.zenithkandel.com.np');
+define('SMTP_PORT', 465);
+define('SMTP_USER', 'admin@zenithkandel.com.np');
+define('SMTP_PASS', '8038@Zenith');
+define('SMTP_FROM', 'admin@zenithkandel.com.np');
+
+define('ADMIN_EMAIL', 'admin@zenithkandel.com.np');
+define('ADMIN_PASS', '8038@Zenith');
 
 define('CONFIG_FILE', __DIR__ . '/user_config.json');
 
