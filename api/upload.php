@@ -1,8 +1,12 @@
 <?php
+error_reporting(0);
+ini_set('display_errors', 0);
+
 require_once '../config.php';
 requireAuth();
 
 header('Content-Type: application/json');
+header('Cache-Control: no-cache');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['error' => 'Invalid request']);

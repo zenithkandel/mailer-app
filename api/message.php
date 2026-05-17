@@ -1,8 +1,12 @@
 <?php
+error_reporting(0);
+ini_set('display_errors', 0);
+
 require_once '../config.php';
 requireAuth();
 
 header('Content-Type: application/json');
+header('Cache-Control: no-cache');
 
 if (!extension_loaded('imap')) {
     echo json_encode(['error' => 'PHP IMAP extension is not installed']);

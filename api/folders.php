@@ -1,21 +1,40 @@
 <?php
+error_reporting(0);
+ini_set('display_errors', 0);
+
+header('Content-Type: application/json');
+header('Cache-Control: no-cache');
+
+function output($data) {
+    echo json_encode($data);
+    exit;
+}
+
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error && in_array($error['type'], [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        if (!headers_sent()) {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Server error: ' . $error['message']]);
+        }
+        exit;
+    }
+});
+
+if (!function_exists('imap_open')) {
+    output(['error' => 'IMAP extension not available']);
+}
+
 require_once '../config.php';
 requireAuth();
 
-header('Content-Type: application/json');
-
-if (!extension_loaded('imap')) {
-    echo json_encode(['error' => 'PHP IMAP extension is not installed']);
-    exit;
-}
-
 $mbox = getImapConnection();
 if (!$mbox) {
-    echo json_encode(['error' => 'Cannot connect to mail server. Check IMAP credentials.']);
+    echo json_encode(['error' => 'Cannot connect to mail server']);
     exit;
 }
 
-$list = imap_list($mbox, IMAP_PREFIX, '*');
+$list = @imap_list($mbox, IMAP_PREFIX, '*');
 
 $folders = [];
 if ($list) {

@@ -1,4 +1,6 @@
 <?php
+error_reporting(0);
+ini_set('display_errors', 0);
 
 define('IMAP_HOST', 'mail.zenithkandel.com.np');
 define('IMAP_PORT', 993);

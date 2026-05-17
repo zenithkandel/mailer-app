@@ -1,13 +1,25 @@
 <?php
-require_once '../config.php';
-requireAuth();
+error_reporting(0);
+ini_set('display_errors', 0);
+
+ob_start();
 
 header('Content-Type: application/json');
+header('Cache-Control: no-cache');
 
-if (!extension_loaded('imap')) {
-    echo json_encode(['error' => 'PHP IMAP extension is not installed']);
+function output($data) {
+    ob_end_clean();
+    echo json_encode($data);
     exit;
 }
+
+if (!function_exists('imap_open')) {
+    ob_end_clean();
+    output(['error' => 'IMAP extension not available']);
+}
+
+require_once '../config.php';
+requireAuth();
 
 $folder = $_GET['folder'] ?? 'INBOX';
 $page = max(1, intval($_GET['page'] ?? 1));
