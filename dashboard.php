@@ -265,6 +265,64 @@ requireLogin();
             }
         }
         
+        function applySignature() {
+            var select = document.getElementById('signature');
+            var body = document.getElementById('body');
+            if (select && body && select.value) {
+                body.value += (body.value ? '\n\n' : '') + select.value;
+            }
+        }
+        
+        async function sendEmail(e) {
+            e.preventDefault();
+            var form = document.getElementById('composeForm');
+            var formData = new FormData(form);
+            var alertDiv = document.getElementById('composeAlert');
+            var progress = document.getElementById('progress');
+            var progressText = progress ? progress.querySelector('.progress-text') : null;
+            var steps = progress ? progress.querySelectorAll('.progress-step') : [];
+            
+            if (progress) progress.style.display = 'flex';
+            var step = 1;
+            var progressInterval = setInterval(function() {
+                if (step <= 5 && progressText) {
+                    steps[step-1].className = 'progress-step active';
+                    var texts = ['Connecting to server...', 'Authenticating...', 'Preparing email...', 'Sending...', 'Finalizing...'];
+                    progressText.textContent = texts[step-1];
+                    step++;
+                }
+            }, 600);
+            
+            try {
+                var response = await fetch('api.php?action=send', {
+                    method: 'POST',
+                    body: formData
+                });
+                var result = await response.json();
+                
+                clearInterval(progressInterval);
+                if (steps.length > 0) {
+                    steps.forEach(function(s) { s.className = 'progress-step completed'; });
+                }
+                
+                if (result.success) {
+                    if (progressText) progressText.textContent = 'Sent!';
+                    if (alertDiv) alertDiv.innerHTML = '<div class="alert alert-success"><i class="fa-sharp-duotone fa-thin fa-circle-check"></i> Email sent successfully!</div>';
+                    form.reset();
+                    if (progress) setTimeout(function() { progress.style.display = 'none'; }, 1500);
+                } else {
+                    if (progressText) progressText.textContent = 'Failed';
+                    if (steps[4]) steps[4].style.background = 'var(--danger)';
+                    if (alertDiv) alertDiv.innerHTML = '<div class="alert alert-error"><i class="fa-sharp-duotone fa-thin fa-circle-exclamation"></i> ' + result.error + '</div>';
+                    if (progress) setTimeout(function() { progress.style.display = 'none'; }, 2000);
+                }
+            } catch (err) {
+                clearInterval(progressInterval);
+                if (progress) progress.style.display = 'none';
+                if (alertDiv) alertDiv.innerHTML = '<div class="alert alert-error">Error: ' + err.message + '</div>';
+            }
+        }
+        
         function performSearch() {
             var q = document.getElementById('searchQuery').value;
             loadPage('search', { q: q });
