@@ -25,19 +25,19 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
 
             <nav class="sidebar-nav">
                 <a href="inbox.php" class="nav-item">
-                    <i class="icon fa fa-inbox"></i>
+                    <i class="fa-sharp-duotone fa-thin fa-inbox"></i>
                     Inbox
                 </a>
                 <a href="sent.php" class="nav-item">
-                    <i class="icon fa fa-paper-plane"></i>
+                    <i class="fa-sharp-duotone fa-thin fa-paper-plane"></i>
                     Sent
                 </a>
                 <a href="compose.php" class="nav-item active">
-                    <i class="icon fa fa-pencil"></i>
+                    <i class="fa-sharp-duotone fa-thin fa-pencil"></i>
                     Compose
                 </a>
                 <a href="search.php" class="nav-item">
-                    <i class="icon fa fa-search"></i>
+                    <i class="fa-sharp-duotone fa-thin fa-magnifying-glass"></i>
                     Search
                 </a>
             </nav>
@@ -48,7 +48,7 @@ $error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : '';
                     <div class="sidebar-user-email"><?php echo htmlspecialchars($_SESSION['user']); ?></div>
                 </div>
                 <a href="logout.php" class="nav-item" style="margin-top: 12px; margin-left: -20px; margin-right: -20px;">
-                    <i class="icon fa fa-sign-out"></i>
+                    <i class="fa-sharp-duotone fa-thin fa-sign-out"></i>
                     Logout
                 </a>
             </div>

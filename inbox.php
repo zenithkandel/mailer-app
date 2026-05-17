@@ -50,22 +50,22 @@ function formatDate($timestamp) {
 
             <nav class="sidebar-nav">
                 <a href="inbox.php" class="nav-item active">
-                    <i class="icon fa fa-inbox"></i>
+                    <i class="fa-sharp-duotone fa-thin fa-inbox"></i>
                     Inbox
                     <?php if ($unreadCount > 0): ?>
                     <span class="badge"><?php echo $unreadCount; ?></span>
                     <?php endif; ?>
                 </a>
                 <a href="sent.php" class="nav-item">
-                    <i class="icon fa fa-paper-plane"></i>
+                    <i class="fa-sharp-duotone fa-thin fa-paper-plane"></i>
                     Sent
                 </a>
                 <a href="compose.php" class="nav-item">
-                    <i class="icon fa fa-pencil"></i>
+                    <i class="fa-sharp-duotone fa-thin fa-pencil"></i>
                     Compose
                 </a>
                 <a href="search.php" class="nav-item">
-                    <i class="icon fa fa-search"></i>
+                    <i class="fa-sharp-duotone fa-thin fa-magnifying-glass"></i>
                     Search
                 </a>
             </nav>
@@ -76,7 +76,7 @@ function formatDate($timestamp) {
                     <div class="sidebar-user-email"><?php echo htmlspecialchars($_SESSION['user']); ?></div>
                 </div>
                 <a href="logout.php" class="nav-item" style="margin-top: 12px; margin-left: -20px; margin-right: -20px;">
-                    <i class="icon fa fa-sign-out"></i>
+                    <i class="fa-sharp-duotone fa-thin fa-sign-out"></i>
                     Logout
                 </a>
             </div>
@@ -87,13 +87,13 @@ function formatDate($timestamp) {
                 <div class="page-header">
                     <h2 class="page-title">Inbox</h2>
                     <div class="page-actions">
-                        <button class="btn-icon" onclick="location.reload()" title="Refresh"><i class="fa fa-refresh"></i></button>
+                        <button class="btn-icon" onclick="location.reload()" title="Refresh"><i class="fa-sharp-duotone fa-thin fa-rotate"></i></button>
                     </div>
                 </div>
 
                 <?php if (empty($emails)): ?>
                 <div class="empty-state">
-                    <i class="icon fa fa-envelope-o"></i>
+                    <i class="fa-sharp-duotone fa-thin fa-envelope"></i>
                     <p>No emails in your inbox</p>
                 </div>
                 <?php else: ?>

@@ -281,10 +281,12 @@ a {
     font-weight: 600;
 }
 
-.nav-item .icon {
-    font-size: 16px;
+.nav-item .icon,
+.nav-item i {
+    font-size: 15px;
     width: 20px;
     text-align: center;
+    font-weight: 300;
 }
 
 .sidebar-user {
@@ -372,6 +374,10 @@ a {
     background: var(--bg-hover);
     border-color: var(--border-dark);
     color: var(--text-primary);
+}
+
+.btn-icon i {
+    font-size: 14px;
 }
 
 /* Email List */
@@ -626,8 +632,9 @@ a {
     border: 1px solid var(--border);
 }
 
-.empty-state .icon {
-    font-size: 40px;
+.empty-state .icon,
+.empty-state i {
+    font-size: 36px;
     margin-bottom: 16px;
     color: var(--text-light);
 }

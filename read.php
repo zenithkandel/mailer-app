@@ -47,6 +47,7 @@ function getInitials($name) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($email['subject']); ?> - Mail App</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://zenithkandel.com.np/fontawesome/zenith-icons.js"></script>
 </head>
 <body>
     <div class="app-layout">
@@ -58,19 +59,19 @@ function getInitials($name) {
 
             <nav class="sidebar-nav">
                 <a href="inbox.php" class="nav-item">
-                    <span class="icon">&#128229;</span>
+                    <i class="fa-sharp-duotone fa-thin fa-inbox"></i>
                     Inbox
                 </a>
                 <a href="sent.php" class="nav-item">
-                    <span class="icon">&#128228;</span>
+                    <i class="fa-sharp-duotone fa-thin fa-paper-plane"></i>
                     Sent
                 </a>
                 <a href="compose.php" class="nav-item">
-                    <span class="icon">&#9993;</span>
+                    <i class="fa-sharp-duotone fa-thin fa-pencil"></i>
                     Compose
                 </a>
                 <a href="search.php" class="nav-item">
-                    <span class="icon">&#128269;</span>
+                    <i class="fa-sharp-duotone fa-thin fa-magnifying-glass"></i>
                     Search
                 </a>
             </nav>
@@ -81,59 +82,61 @@ function getInitials($name) {
                     <div class="sidebar-user-email"><?php echo htmlspecialchars($_SESSION['user']); ?></div>
                 </div>
                 <a href="logout.php" class="nav-item" style="margin-top: 12px; margin-left: -20px; margin-right: -20px;">
-                    <span class="icon">&#128682;</span>
+                    <i class="fa-sharp-duotone fa-thin fa-sign-out"></i>
                     Logout
                 </a>
             </div>
         </aside>
 
         <main class="main-content">
-            <a href="inbox.php" class="back-link">&#8592; Back to Inbox</a>
+            <div class="page-container">
+                <a href="inbox.php" class="back-link"><i class="fa-sharp-duotone fa-thin fa-arrow-left"></i> Back to Inbox</a>
 
-            <div class="email-reader">
-                <div class="email-reader-header">
-                    <h1 class="email-reader-subject"><?php echo htmlspecialchars($email['subject']); ?></h1>
-                    <dl class="email-reader-meta">
-                        <dt>From:</dt>
-                        <dd>
-                            <?php echo htmlspecialchars($email['from_name']); ?>
-                            &lt;<?php echo htmlspecialchars($email['from_email']); ?>&gt;
-                        </dd>
-                        <dt>To:</dt>
-                        <dd>
-                            <?php echo htmlspecialchars($email['to_name']); ?>
-                            &lt;<?php echo htmlspecialchars($email['to_email']); ?>&gt;
-                        </dd>
-                        <dt>Date:</dt>
-                        <dd><?php echo formatDateFull($email['date']); ?></dd>
-                    </dl>
-                </div>
+                <div class="email-reader">
+                    <div class="email-reader-header">
+                        <h1 class="email-reader-subject"><?php echo htmlspecialchars($email['subject']); ?></h1>
+                        <dl class="email-reader-meta">
+                            <dt>From:</dt>
+                            <dd>
+                                <?php echo htmlspecialchars($email['from_name']); ?>
+                                &lt;<?php echo htmlspecialchars($email['from_email']); ?>&gt;
+                            </dd>
+                            <dt>To:</dt>
+                            <dd>
+                                <?php echo htmlspecialchars($email['to_name']); ?>
+                                &lt;<?php echo htmlspecialchars($email['to_email']); ?>&gt;
+                            </dd>
+                            <dt>Date:</dt>
+                            <dd><?php echo formatDateFull($email['date']); ?></dd>
+                        </dl>
+                    </div>
 
-                <div class="email-reader-body">
-                    <?php if ($email['html']): ?>
-                    <iframe srcdoc="<?php echo htmlspecialchars($email['html']); ?>"></iframe>
-                    <?php else: ?>
-                    <div class="plain-text"><?php echo htmlspecialchars($email['body']); ?></div>
+                    <div class="email-reader-body">
+                        <?php if ($email['html']): ?>
+                        <iframe srcdoc="<?php echo htmlspecialchars($email['html']); ?>"></iframe>
+                        <?php else: ?>
+                        <div class="plain-text"><?php echo htmlspecialchars($email['body']); ?></div>
+                        <?php endif; ?>
+                    </div>
+
+                    <?php if (!empty($email['attachments'])): ?>
+                    <div class="email-attachments">
+                        <?php foreach ($email['attachments'] as $attachment): ?>
+                        <span class="attachment">
+                            <i class="fa-sharp-duotone fa-thin fa-paperclip"></i> <?php echo htmlspecialchars($attachment['filename']); ?>
+                            (<?php echo formatSize($attachment['size']); ?>)
+                        </span>
+                        <?php endforeach; ?>
+                    </div>
                     <?php endif; ?>
-                </div>
 
-                <?php if (!empty($email['attachments'])): ?>
-                <div class="email-attachments">
-                    <?php foreach ($email['attachments'] as $attachment): ?>
-                    <span class="attachment">
-                        &#128206; <?php echo htmlspecialchars($attachment['filename']); ?>
-                        (<?php echo formatSize($attachment['size']); ?>)
-                    </span>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-
-                <div class="email-reader-actions">
-                    <form method="POST" action="delete.php" style="display:inline;">
-                        <input type="hidden" name="uid" value="<?php echo $email['uid']; ?>">
-                        <input type="hidden" name="redirect" value="inbox.php">
-                        <button type="submit" class="btn btn-secondary" onclick="return confirm('Delete this email?')">Delete</button>
-                    </form>
+                    <div class="email-reader-actions">
+                        <form method="POST" action="delete.php" style="display:inline;">
+                            <input type="hidden" name="uid" value="<?php echo $email['uid']; ?>">
+                            <input type="hidden" name="redirect" value="inbox.php">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this email?')"><i class="fa-sharp-duotone fa-thin fa-trash"></i> Delete</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </main>

@@ -33,6 +33,7 @@ function formatDate($timestamp) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Mail App</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://zenithkandel.com.np/fontawesome/zenith-icons.js"></script>
 </head>
 <body>
     <div class="app-layout">
@@ -43,16 +44,16 @@ function formatDate($timestamp) {
             </div>
             <nav class="sidebar-nav">
                 <a href="inbox.php" class="nav-item">
-                    <span class="icon">&#128229;</span> Inbox
+                    <i class="fa-sharp-duotone fa-thin fa-inbox"></i> Inbox
                 </a>
                 <a href="sent.php" class="nav-item">
-                    <span class="icon">&#128228;</span> Sent
+                    <i class="fa-sharp-duotone fa-thin fa-paper-plane"></i> Sent
                 </a>
                 <a href="compose.php" class="nav-item">
-                    <span class="icon">&#9993;</span> Compose
+                    <i class="fa-sharp-duotone fa-thin fa-pencil"></i> Compose
                 </a>
                 <a href="search.php" class="nav-item">
-                    <span class="icon">&#128269;</span> Search
+                    <i class="fa-sharp-duotone fa-thin fa-magnifying-glass"></i> Search
                 </a>
             </nav>
             <div class="sidebar-user">
@@ -61,53 +62,54 @@ function formatDate($timestamp) {
                     <div class="sidebar-user-email"><?php echo htmlspecialchars($_SESSION['user']); ?></div>
                 </div>
                 <a href="logout.php" class="nav-item" style="margin-top:12px;margin-left:-20px;margin-right:-20px;">
-                    <span class="icon">&#128682;</span> Logout
+                    <i class="fa-sharp-duotone fa-thin fa-sign-out"></i> Logout
                 </a>
             </div>
         </aside>
         <main class="main-content">
-            <div class="page-header">
-                <h2 class="page-title">Dashboard</h2>
-                <a href="compose.php" class="btn btn-peach">Compose</a>
-            </div>
-
-            <div class="dashboard-stats">
-                <div class="stat-card">
-                    <h3>Unread</h3>
-                    <div class="value green"><?php echo $unreadCount; ?></div>
+            <div class="page-container">
+                <div class="page-header">
+                    <h2 class="page-title">Dashboard</h2>
+                    <a href="compose.php" class="btn btn-peach"><i class="fa-sharp-duotone fa-thin fa-pencil"></i> Compose</a>
                 </div>
-                <div class="stat-card">
-                    <h3>Total Sent</h3>
-                    <div class="value accent"><?php echo count($sentEmails); ?></div>
-                </div>
-            </div>
 
-            <h3 style="margin-bottom:16px;font-size:15px;font-weight:500;">Recent Inbox</h3>
-            <?php if (empty($inboxEmails)): ?>
-            <div class="empty-state">
-                <div class="icon">&#128231;</div>
-                <p>No emails in inbox</p>
-            </div>
-            <?php else: ?>
-            <div class="email-list">
-                <?php foreach ($inboxEmails as $email): ?>
-                <a href="read.php?uid=<?php echo $email['uid']; ?>" class="email-item <?php echo $email['read'] ? '' : 'unread'; ?>">
-                    <div class="email-avatar"><?php echo getInitials($email['from_name']); ?></div>
-                    <div class="email-content">
-                        <div class="email-sender">
-                            <?php if (!$email['read']): ?><span class="unread-dot"></span><?php endif; ?>
-                            <?php echo htmlspecialchars($email['from_name']); ?>
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <h3>Unread</h3>
+                        <div class="value green"><?php echo $unreadCount; ?></div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Sent</h3>
+                        <div class="value accent"><?php echo count($sentEmails); ?></div>
+                    </div>
+                </div>
+
+                <h3 class="section-header">Recent Inbox</h3>
+                <?php if (empty($inboxEmails)): ?>
+                <div class="empty-state">
+                    <i class="fa-sharp-duotone fa-thin fa-envelope"></i>
+                    <p>No emails in inbox</p>
+                </div>
+                <?php else: ?>
+                <div class="email-list">
+                    <?php foreach ($inboxEmails as $email): ?>
+                    <a href="read.php?uid=<?php echo $email['uid']; ?>" class="email-item <?php echo $email['read'] ? '' : 'unread'; ?>">
+                        <div class="email-avatar"><?php echo getInitials($email['from_name']); ?></div>
+                        <div class="email-content">
+                            <span class="email-sender">
+                                <?php if (!$email['read']): ?><span class="unread-dot"></span><?php endif; ?>
+                                <?php echo htmlspecialchars($email['from_name']); ?>
+                            </span>
+                            <span class="email-subject"><?php echo htmlspecialchars($email['subject']); ?></span>
                         </div>
-                        <div class="email-subject"><?php echo htmlspecialchars($email['subject']); ?></div>
-                        <div class="email-preview"><?php echo htmlspecialchars($email['preview']); ?></div>
-                    </div>
-                    <div class="email-meta">
-                        <div class="email-date"><?php echo formatDate($email['date']); ?></div>
-                    </div>
-                </a>
-                <?php endforeach; ?>
+                        <div class="email-meta">
+                            <span class="email-date"><?php echo formatDate($email['date']); ?></span>
+                        </div>
+                    </a>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
             </div>
-            <?php endif; ?>
         </main>
     </div>
 </body>
