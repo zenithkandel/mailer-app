@@ -59,15 +59,16 @@ function fetchEmails($folder = 'INBOX', $limit = 50, $start = 0)
 
         $subject = isset($header->subject) ? imap_mime_header_decode($header->subject) : '';
         $subject = is_array($subject) ? implode('', array_map(function ($s) {
-            return $s->text; }, $subject)) : $subject;
+            return $s->text;
+        }, $subject)) : $subject;
 
         $date = isset($header->udate) ? $header->udate : time();
         $read = isset($overview[0]->seen) && $overview[0]->seen == 1;
 
         $preview = '';
-        $body = imap_fetchbody($connection, $i, '1');
+        $body = @imap_fetchbody($connection, $i, '1');
         if ($body) {
-            $body = imap_qprint($body);
+            $body = safe_qprint($body);
             $preview = substr(strip_tags($body), 0, 100);
         }
 
@@ -117,7 +118,8 @@ function fetchEmailByUid($uid)
 
     $subject = isset($header->subject) ? imap_mime_header_decode($header->subject) : '';
     $subject = is_array($subject) ? implode('', array_map(function ($s) {
-        return $s->text; }, $subject)) : $subject;
+        return $s->text;
+    }, $subject)) : $subject;
 
     $date = isset($header->udate) ? $header->udate : time();
 
@@ -128,11 +130,11 @@ function fetchEmailByUid($uid)
     if (isset($structure->parts)) {
         foreach ($structure->parts as $partNum => $part) {
             if ($part->type == 0 && $part->subtype == 'PLAIN') {
-                $body = imap_fetchbody($connection, $msgnum, $partNum + 1);
-                $body = imap_qprint($body);
+                $body = @imap_fetchbody($connection, $msgnum, $partNum + 1);
+                $body = safe_qprint($body);
             } elseif ($part->type == 0 && $part->subtype == 'HTML') {
-                $html = imap_fetchbody($connection, $msgnum, $partNum + 1);
-                $html = imap_qprint($html);
+                $html = @imap_fetchbody($connection, $msgnum, $partNum + 1);
+                $html = safe_qprint($html);
             } elseif ($part->type >= 2) {
                 $attachment = getAttachment($connection, $msgnum, $partNum + 1, $part);
                 if ($attachment) {
@@ -143,8 +145,26 @@ function fetchEmailByUid($uid)
     }
 
     if (!$body && !$html) {
-        $body = imap_fetchbody($connection, $msgnum, '1');
-        $body = imap_qprint($body);
+        $body = @imap_fetchbody($connection, $msgnum, '1');
+        $body = safe_qprint($body);
+    }
+
+    // Safely decode quoted-printable data while suppressing non-fatal notices
+    function safe_qprint($data)
+    {
+        if ($data === false || $data === null)
+            return '';
+        $prev = set_error_handler(function ($errno, $errstr) {
+            // Suppress invalid quoted-printable sequence notices
+            return true;
+        });
+        $decoded = imap_qprint($data);
+        if ($prev !== null) {
+            set_error_handler($prev);
+        } else {
+            restore_error_handler();
+        }
+        return $decoded === false ? quoted_printable_decode($data) : $decoded;
     }
 
     imap_close($connection);
@@ -263,7 +283,8 @@ function searchEmails($query, $folder = 'INBOX')
 
         $subject = isset($header->subject) ? imap_mime_header_decode($header->subject) : '';
         $subject = is_array($subject) ? implode('', array_map(function ($s) {
-            return $s->text; }, $subject)) : $subject;
+            return $s->text;
+        }, $subject)) : $subject;
 
         if (stripos($subject, $query) !== false || stripos($senderEmail, $query) !== false || stripos($senderName, $query) !== false) {
             $overview = imap_fetch_overview($connection, $msgnum, 0);

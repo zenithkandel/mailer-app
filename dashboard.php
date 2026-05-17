@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/config.php';
-require_login();
+requireLogin();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -128,11 +128,11 @@ require_login();
             content.innerHTML = '<div class="loading-spinner"><i class="fa-sharp-duotone fa-thin fa-spinner"></i></div>';
 
             try {
-                const url = new URL('api.php', window.location.origin);
-                url.searchParams.set('action', page);
-                Object.keys(params).forEach(key => url.searchParams.set(key, params[key]));
+                let url = 'api.php?action=' + page;
+                Object.keys(params).forEach(key => url += '&' + key + '=' + encodeURIComponent(params[key]));
                 
                 const response = await fetch(url);
+                if (!response.ok) throw new Error('HTTP ' + response.status);
                 const html = await response.text();
                 content.innerHTML = html;
                 
@@ -156,12 +156,7 @@ require_login();
             content.innerHTML = '<div class="loading-spinner"><i class="fa-sharp-duotone fa-thin fa-spinner"></i></div>';
             
             try {
-                const url = new URL('api.php', window.location.origin);
-                url.searchParams.set('action', 'read');
-                url.searchParams.set('uid', uid);
-                url.searchParams.set('from', currentPage);
-                
-                const response = await fetch(url);
+                const response = await fetch('api.php?action=read&uid=' + uid + '&from=' + currentPage);
                 const html = await response.text();
                 content.innerHTML = html;
                 currentView = 'read';
