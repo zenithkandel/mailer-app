@@ -47,7 +47,7 @@ function getInitials($name) {
                     <i class="fa-sharp-duotone fa-thin fa-paper-plane"></i>
                     Sent
                 </a>
-                <a href="compose.php" class="nav-item">
+<a href="compose.php" class="nav-item">
                     <i class="fa-sharp-duotone fa-thin fa-pen-nib"></i>
                     Compose
                 </a>

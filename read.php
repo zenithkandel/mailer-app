@@ -55,7 +55,7 @@ function getInitials($name) {
     <div class="app-layout">
         <aside class="sidebar">
             <div class="sidebar-logo">
-                <h1>Mail</h1>
+                <h1><i class="fa-sharp-duotone fa-thin fa-envelope"></i> Mail</h1>
                 <p>Webmail</p>
             </div>
 
@@ -68,8 +68,8 @@ function getInitials($name) {
                     <i class="fa-sharp-duotone fa-thin fa-paper-plane"></i>
                     Sent
                 </a>
-                <a href="compose.php" class="nav-item">
-                    <i class="fa-sharp-duotone fa-thin fa-pencil"></i>
+<a href="compose.php" class="nav-item">
+                    <i class="fa-sharp-duotone fa-thin fa-pen-nib"></i>
                     Compose
                 </a>
                 <a href="search.php" class="nav-item">

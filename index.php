@@ -34,26 +34,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="login-page">
         <div class="login-card">
             <div class="login-logo">
-                Mail
+                <i class="fa-sharp-duotone fa-thin fa-envelope"></i> Mail
                 <span>Sign in to your account</span>
             </div>
 
             <div class="login-error <?php echo $error ? 'show' : ''; ?>">
-                <?php echo htmlspecialchars($error); ?>
+                <i class="fa-sharp-duotone fa-thin fa-circle-exclamation"></i> <?php echo htmlspecialchars($error); ?>
             </div>
 
             <form method="POST" action="">
                 <div class="form-group">
-                    <label for="email">Email Address</label>
+                    <label for="email"><i class="fa-sharp-duotone fa-thin fa-user"></i> Email Address</label>
                     <input type="email" id="email" name="email" placeholder="Enter your email" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Password</label>
+                    <label for="password"><i class="fa-sharp-duotone fa-thin fa-lock"></i> Password</label>
                     <input type="password" id="password" name="password" placeholder="Enter your password" required>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Sign In</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-sharp-duotone fa-thin fa-right-to-bracket"></i> Sign In</button>
             </form>
         </div>
     </div>

@@ -97,6 +97,12 @@ a {
     letter-spacing: 0.5px;
 }
 
+.form-group label i {
+    margin-right: 6px;
+    font-size: 12px;
+    opacity: 0.7;
+}
+
 .form-group input,
 .form-group textarea {
     width: 100%;
