@@ -1,21 +1,23 @@
 {
   "app_name": "Zenith Mail",
   "admin_user": "admin",
-  "admin_pass": "changeme123",
+  "admin_pass": "8038@Zenith",
+
   "smtp": {
-    "host": "mail.example.com",
+    "host": "mail.zenithkandel.com.np",
     "port": 465,
     "security": "ssl",
-    "user": "admin@example.com",
-    "pass": "your_email_password",
-    "from_email": "admin@example.com",
-    "from_name": "Zenith Mail"
+    "user": "admin@zenithkandel.com.np",
+    "pass": "8038@Zenith",
+    "from_email": "admin@zenithkandel.com.np",
+    "from_name": "ZenithKandel"
   },
+
   "imap": {
-    "host": "mail.example.com",
+    "host": "mail.zenithkandel.com.np",
     "port": 993,
     "security": "ssl",
-    "user": "admin@example.com",
-    "pass": "your_email_password"
+    "user": "admin@zenithkandel.com.np",
+    "pass": "8038@Zenith"
   }
 }

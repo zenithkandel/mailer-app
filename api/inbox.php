@@ -87,27 +87,25 @@ if (!empty($search)) {
     $searchResults = imap_search($mbox, 'ALL', SE_FREE, 'UTF-8');
     if ($searchResults === false) $searchResults = [];
 
-    $filtered = [];
+    $sorted = [];
     foreach ($searchResults as $msgNum) {
         $h = @imap_headerinfo($mbox, $msgNum);
         if ($h === false) continue;
         $subj = decodeHeader($h->subject ?? '');
+        $fromNameObj = $h->from[0] ?? null;
         $from = decodeHeader(implode(' ', array_filter([
-            $h->from[0]->personal ?? '',
-            $h->from[0]->mailbox ?? '',
-            $h->from[0]->host ?? ''
+            $fromNameObj->personal ?? '',
+            $fromNameObj->mailbox ?? '',
+            $fromNameObj->host ?? ''
         ])));
         if (stripos($subj, $search) !== false || stripos($from, $search) !== false) {
-            $filtered[$msgNum] = $h;
+            $sorted[] = ['msgNum' => $msgNum, 'header' => $h];
         }
     }
-    usort($searchResults, function($a, $b) use ($filtered) {
-        $ha = $filtered[$a] ?? null;
-        $hb = $filtered[$b] ?? null;
-        if (!$ha || !$hb) return 0;
-        return strtotime($hb->date ?? '') <=> strtotime($ha->date ?? '');
+    usort($sorted, function($a, $b) {
+        return strtotime($b['header']->date ?? '') <=> strtotime($a['header']->date ?? '');
     });
-    $searchResults = $filtered;
+    $searchResults = array_column($sorted, 'msgNum');
 } else {
     $searchResults = imap_sort($mbox, SORTDATE, 1, SE_FREE, null, 'UTF-8');
     if ($searchResults === false) $searchResults = [];
