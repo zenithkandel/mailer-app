@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/api/config.php';
 require_once __DIR__ . '/api/csrf.php';
+require_once __DIR__ . '/api/helpers.php';
 
 if (isLoggedIn()) {
     header('Location: dashboard.php');
