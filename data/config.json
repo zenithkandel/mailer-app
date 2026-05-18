@@ -1,0 +1,21 @@
+{
+  "app_name": "Zenith Mail",
+  "admin_user": "admin",
+  "admin_pass": "changeme123",
+  "smtp": {
+    "host": "mail.example.com",
+    "port": 465,
+    "security": "ssl",
+    "user": "admin@example.com",
+    "pass": "your_email_password",
+    "from_email": "admin@example.com",
+    "from_name": "Zenith Mail"
+  },
+  "imap": {
+    "host": "mail.example.com",
+    "port": 993,
+    "security": "ssl",
+    "user": "admin@example.com",
+    "pass": "your_email_password"
+  }
+}
