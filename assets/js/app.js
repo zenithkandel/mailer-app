@@ -8,6 +8,7 @@
     let emails = [];
     let selectedEmail = null;
     let searchTimeout;
+    let viewStack = []; // stack of view states for back navigation
 
     function csrfHeaders() {
         return { 'X-CSRF-TOKEN': C.csrfToken };
@@ -66,13 +67,15 @@
             C.hasMore = true;
             emails = [];
             if (listEl) listEl.innerHTML = '';
-            if (detailEl) { detailEl.innerHTML = ''; detailEl.classList.add('hidden'); }
+            if (detailEl) detailEl.innerHTML = '';
             selectedEmail = null;
         }
 
         if (!$('#emailList')) return;
 
-        $('#emailList').innerHTML = `<div class="loading-spinner"><div class="spinner"></div></div>`;
+        if (emails.length === 0) {
+            $('#emailList').innerHTML = `<div class="loading-spinner"><div class="spinner"></div></div>`;
+        }
 
         try {
             const url = `api/mail.php?action=${C.currentView}&page=${C.page}&search=${encodeURIComponent(C.searchQuery)}`;
@@ -174,61 +177,61 @@
         const isInbox = view === 'inbox';
 
         detailEl.innerHTML = `
-            <div class="email-detail-header">
-                <button class="email-detail-back" onclick="window.app.closeEmail()">
-                    <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    Back
-                </button>
-                <div class="email-detail-subject">${escHtml(email.subject || '(No subject)')}</div>
-            </div>
-            <div class="email-detail-meta">
-                <div class="sender-avatar">${initials}</div>
-                <div class="sender-info">
-                    <div class="sender-name">${escHtml(sender)}</div>
-                    <div class="sender-email">${escHtml(senderEmail)}</div>
+            <div class="email-detail">
+                <div class="email-detail-header">
+                    <button class="email-detail-back" onclick="window.app.closeEmail()">
+                        <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        Back
+                    </button>
+                    <div class="email-detail-subject">${escHtml(email.subject || '(No subject)')}</div>
                 </div>
-                <div class="email-date-full">${formatDate(email.date)}</div>
-            </div>
-            <div class="email-actions-bar">
-                <button class="email-action-btn" onclick="window.app.replyToEmail()">
-                    <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-                    Reply
-                </button>
-                <button class="email-action-btn" onclick="window.app.forwardEmail()">
-                    <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M15 5l4 4-4 4"/><line x1="21" y1="9" x2="3" y2="9"/><line x1="3" y1="19" x2="21" y2="19"/></svg>
-                    Forward
-                </button>
-                <button class="email-action-btn" onclick="window.app.deleteEmail(${email.id})">
-                    <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    Delete
-                </button>
-                <button class="email-action-btn${email.flagged ? '' : ''}" onclick="window.app.toggleStar(${email.id})">
-                    <svg viewBox="0 0 24 24" fill="${email.flagged ? 'currentColor' : 'none'}"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                    ${email.flagged ? 'Unstar' : 'Star'}
-                </button>
-            </div>
-            <div class="email-body" id="emailBodyWrap">
-                <div class="loading-spinner"><div class="spinner"></div></div>
-            </div>
-            <div class="email-reply-section" id="replySection">
-                <h4>Reply</h4>
-                <textarea class="reply-area" id="replyArea" placeholder="Write your reply... (Ctrl+Enter to send)"></textarea>
-                <div class="reply-actions">
-                    <button class="btn btn-primary" onclick="window.app.sendReply()">
-                        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                        Send Reply
+                <div class="email-detail-meta">
+                    <div class="sender-avatar">${initials}</div>
+                    <div class="sender-info">
+                        <div class="sender-name">${escHtml(sender)}</div>
+                        <div class="sender-email">${escHtml(senderEmail)}</div>
+                    </div>
+                    <div class="email-date-full">${formatDate(email.date)}</div>
+                </div>
+                <div class="email-actions-bar">
+                    <button class="email-action-btn" onclick="window.app.replyToEmail()">
+                        <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                        Reply
+                    </button>
+                    <button class="email-action-btn" onclick="window.app.forwardEmail()">
+                        <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M15 5l4 4-4 4"/><line x1="21" y1="9" x2="3" y2="9"/><line x1="3" y1="19" x2="21" y2="19"/></svg>
+                        Forward
+                    </button>
+                    <button class="email-action-btn" onclick="window.app.deleteEmail(${email.id})">
+                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Delete
+                    </button>
+                    <button class="email-action-btn" onclick="window.app.toggleStar(${email.id})">
+                        <svg viewBox="0 0 24 24" fill="${email.flagged ? 'currentColor' : 'none'}"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        ${email.flagged ? 'Unstar' : 'Star'}
                     </button>
                 </div>
-            </div>
-        `;
+                <div class="email-body" id="emailBodyWrap">
+                    <div class="loading-spinner"><div class="spinner"></div></div>
+                </div>
+                <div class="email-reply-section">
+                    <h4>Reply</h4>
+                    <textarea class="reply-area" id="replyArea" placeholder="Write your reply... (Ctrl+Enter to send)"></textarea>
+                    <div class="reply-actions">
+                        <button class="btn btn-primary" onclick="window.app.sendReply()">
+                            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            Send
+                        </button>
+                    </div>
+                </div>
+            </div>`;
 
-        detailEl.classList.remove('hidden');
-        detailEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        detailEl.classList.add('open');
 
         if (isInbox && email.unread) {
-            fetch(`api/mail.php?action=mark&ids=${email.id}&flag=read&folder=${view}`, {
+            fetch(`api/mail.php?action=mark`, {
                 method: 'POST',
-                headers: { ...csrfHeaders(), 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': C.csrfToken },
                 body: JSON.stringify({ ids: [email.id], flag: 'read', folder: view })
             }).then(() => {
                 email.unread = false;
@@ -395,10 +398,10 @@
                 </div>
                 <div class="email-list-wrap">
                     <div class="email-list" id="emailList"></div>
+                    <div id="emailDetail"></div>
                     <div class="load-more-wrap hidden" id="loadMoreWrap">
                         <button class="load-more-btn" onclick="window.app.loadMore()">Load More</button>
                     </div>
-                    <div id="emailDetail" class="hidden"></div>
                 </div>
             </div>`;
 
@@ -595,7 +598,7 @@
             emails = emails.filter(e => e.id != id);
             if (selectedEmail?.id == id) selectedEmail = null;
             const detailEl = $('#emailDetail');
-            if (detailEl) detailEl.classList.add('hidden');
+            if (detailEl) detailEl.classList.remove('open');
             renderEmailList();
             renderEmptyOrList();
         } catch (err) {
@@ -699,7 +702,7 @@
 
         closeEmail: function() {
             const detailEl = $('#emailDetail');
-            if (detailEl) detailEl.classList.add('hidden');
+            if (detailEl) detailEl.classList.remove('open');
             $$('.email-item').forEach(el => el.classList.remove('selected'));
             selectedEmail = null;
         },
