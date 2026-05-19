@@ -1,20 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sent</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
+
 <body>
     <div class="page-container">
         <div class="page-toolbar">
             <button class="btn btn-secondary btn-sm" onclick="loadEmails(true)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10" />
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                </svg>
                 Refresh
             </button>
         </div>
-        <div class="page-header"><h2>Sent</h2></div>
+        <div class="page-header">
+            <h2>Sent</h2>
+        </div>
         <div class="email-list-container">
             <ul class="email-list-simple" id="emailList">
                 <li class="empty-state-sm">Loading...</li>
@@ -55,4 +62,5 @@
         loadEmails(true);
     </script>
 </body>
+
 </html>
