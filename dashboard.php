@@ -894,6 +894,76 @@ $csrfToken = csrfGenerate();
         .select-all {
             margin-right: 12px;
         }
+
+        /* Settings Modal */
+        .settings-modal {
+            max-width: 600px;
+            max-height: 85vh;
+        }
+
+        .settings-section {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .settings-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .settings-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-row-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+            flex: 1;
+        }
+
+        .form-group .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .form-group .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--border-color);
+            background: white;
+            font-size: 14px;
+        }
+
+        .form-group .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-group select.form-input {
+            cursor: pointer;
+        }
+
+        .settings-modal .modal-body {
+            padding: 16px 20px;
+        }
+
+        .settings-modal .modal-footer {
+            padding: 12px 20px;
+        }
     </style>
 </head>
 <body>
@@ -961,6 +1031,15 @@ $csrfToken = csrfGenerate();
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                         </svg>
                         <span class="nav-label">Trash</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="openSettings">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                        <span class="nav-label">Settings</span>
                     </a>
                 </li>
             </ul>
@@ -1102,6 +1181,116 @@ $csrfToken = csrfGenerate();
                     </svg>
                     Send
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal settings-modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Settings</h3>
+                <button class="modal-close" id="closeSettings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h4 class="settings-title">General</h4>
+                    <div class="form-group">
+                        <label class="form-label">App Name</label>
+                        <input type="text" class="form-input" id="settingsAppName" placeholder="Zenith Mail">
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h4 class="settings-title">Admin Account</h4>
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-input" id="settingsAdminUser" placeholder="admin">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="settingsAdminPass" placeholder="Password">
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h4 class="settings-title">SMTP Server</h4>
+                    <div class="form-row-group">
+                        <div class="form-group">
+                            <label class="form-label">Host</label>
+                            <input type="text" class="form-input" id="settingsSmtpHost" placeholder="mail.example.com">
+                        </div>
+                        <div class="form-group" style="width: 100px;">
+                            <label class="form-label">Port</label>
+                            <input type="number" class="form-input" id="settingsSmtpPort" placeholder="465">
+                        </div>
+                        <div class="form-group" style="width: 120px;">
+                            <label class="form-label">Security</label>
+                            <select class="form-input" id="settingsSmtpSecurity">
+                                <option value="ssl">SSL</option>
+                                <option value="tls">TLS</option>
+                                <option value="">None</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-input" id="settingsSmtpUser" placeholder="user@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="settingsSmtpPass" placeholder="Password">
+                    </div>
+                    <div class="form-row-group">
+                        <div class="form-group">
+                            <label class="form-label">From Email</label>
+                            <input type="email" class="form-input" id="settingsSmtpFromEmail" placeholder="user@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">From Name</label>
+                            <input type="text" class="form-input" id="settingsSmtpFromName" placeholder="My Name">
+                        </div>
+                    </div>
+                    <button class="toolbar-btn" id="testSmtpBtn" style="margin-top: 8px;">Test SMTP</button>
+                </div>
+
+                <div class="settings-section">
+                    <h4 class="settings-title">IMAP Server</h4>
+                    <div class="form-row-group">
+                        <div class="form-group">
+                            <label class="form-label">Host</label>
+                            <input type="text" class="form-input" id="settingsImapHost" placeholder="mail.example.com">
+                        </div>
+                        <div class="form-group" style="width: 100px;">
+                            <label class="form-label">Port</label>
+                            <input type="number" class="form-input" id="settingsImapPort" placeholder="993">
+                        </div>
+                        <div class="form-group" style="width: 120px;">
+                            <label class="form-label">Security</label>
+                            <select class="form-input" id="settingsImapSecurity">
+                                <option value="ssl">SSL</option>
+                                <option value="tls">TLS</option>
+                                <option value="">None</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-input" id="settingsImapUser" placeholder="user@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="settingsImapPass" placeholder="Password">
+                    </div>
+                    <button class="toolbar-btn" id="testImapBtn" style="margin-top: 8px;">Test IMAP</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelSettingsBtn">Cancel</button>
+                <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
             </div>
         </div>
     </div>
@@ -1606,6 +1795,154 @@ $csrfToken = csrfGenerate();
         document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelected);
         document.getElementById('markReadBtn').addEventListener('click', markAsRead);
         document.getElementById('markUnreadBtn').addEventListener('click', markAsUnread);
+
+        // Settings
+        document.getElementById('openSettings').addEventListener('click', openSettings);
+        document.getElementById('closeSettings').addEventListener('click', closeSettings);
+        document.getElementById('cancelSettingsBtn').addEventListener('click', closeSettings);
+        document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
+        document.getElementById('testSmtpBtn').addEventListener('click', testSmtp);
+        document.getElementById('testImapBtn').addEventListener('click', testImap);
+
+        async function openSettings() {
+            try {
+                const res = await fetch('api/settings.php?action=get', { headers: csrfHeaders() });
+                const data = await res.json();
+                
+                if (data.error) {
+                    showToast(data.error, 'error');
+                    return;
+                }
+                
+                document.getElementById('settingsAppName').value = data.app_name || '';
+                document.getElementById('settingsAdminUser').value = data.admin_user || '';
+                document.getElementById('settingsAdminPass').value = '';
+                
+                document.getElementById('settingsSmtpHost').value = data.smtp?.host || '';
+                document.getElementById('settingsSmtpPort').value = data.smtp?.port || 465;
+                document.getElementById('settingsSmtpSecurity').value = data.smtp?.security || 'ssl';
+                document.getElementById('settingsSmtpUser').value = data.smtp?.user || '';
+                document.getElementById('settingsSmtpPass').value = '';
+                document.getElementById('settingsSmtpFromEmail').value = data.smtp?.from_email || '';
+                document.getElementById('settingsSmtpFromName').value = data.smtp?.from_name || '';
+                
+                document.getElementById('settingsImapHost').value = data.imap?.host || '';
+                document.getElementById('settingsImapPort').value = data.imap?.port || 993;
+                document.getElementById('settingsImapSecurity').value = data.imap?.security || 'ssl';
+                document.getElementById('settingsImapUser').value = data.imap?.user || '';
+                document.getElementById('settingsImapPass').value = '';
+                
+                document.getElementById('settingsModal').classList.add('show');
+            } catch (err) {
+                showToast('Failed to load settings', 'error');
+            }
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('show');
+        }
+
+        async function saveSettings() {
+            const data = {
+                csrf_token: CSRF_TOKEN,
+                app_name: document.getElementById('settingsAppName').value,
+                admin_user: document.getElementById('settingsAdminUser').value,
+                admin_pass: document.getElementById('settingsAdminPass').value,
+                smtp_host: document.getElementById('settingsSmtpHost').value,
+                smtp_port: document.getElementById('settingsSmtpPort').value,
+                smtp_security: document.getElementById('settingsSmtpSecurity').value,
+                smtp_user: document.getElementById('settingsSmtpUser').value,
+                smtp_pass: document.getElementById('settingsSmtpPass').value,
+                smtp_from_email: document.getElementById('settingsSmtpFromEmail').value,
+                smtp_from_name: document.getElementById('settingsSmtpFromName').value,
+                imap_host: document.getElementById('settingsImapHost').value,
+                imap_port: document.getElementById('settingsImapPort').value,
+                imap_security: document.getElementById('settingsImapSecurity').value,
+                imap_user: document.getElementById('settingsImapUser').value,
+                imap_pass: document.getElementById('settingsImapPass').value
+            };
+
+            const btn = document.getElementById('saveSettingsBtn');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            try {
+                const res = await fetch('api/settings.php?action=save', {
+                    method: 'POST',
+                    headers: { ...csrfHeaders(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                
+                if (result.success) {
+                    showToast('Settings saved successfully!', 'success');
+                    closeSettings();
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Save Settings';
+            }
+        }
+
+        async function testSmtp() {
+            const btn = document.getElementById('testSmtpBtn');
+            btn.disabled = true;
+            btn.textContent = 'Testing...';
+            
+            try {
+                const host = document.getElementById('settingsSmtpHost').value;
+                const port = document.getElementById('settingsSmtpPort').value;
+                const security = document.getElementById('settingsSmtpSecurity').value;
+                const user = document.getElementById('settingsSmtpUser').value;
+                const pass = document.getElementById('settingsSmtpPass').value;
+                
+                const res = await fetch(`api/settings.php?action=test_smtp&host=${encodeURIComponent(host)}&port=${port}&security=${encodeURIComponent(security)}&user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`, { headers: csrfHeaders() });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('SMTP connection successful!', 'success');
+                } else {
+                    showToast('SMTP failed: ' + data.error, 'error');
+                }
+            } catch (err) {
+                showToast('SMTP test failed', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Test SMTP';
+            }
+        }
+
+        async function testImap() {
+            const btn = document.getElementById('testImapBtn');
+            btn.disabled = true;
+            btn.textContent = 'Testing...';
+            
+            try {
+                const host = document.getElementById('settingsImapHost').value;
+                const port = document.getElementById('settingsImapPort').value;
+                const security = document.getElementById('settingsImapSecurity').value;
+                const user = document.getElementById('settingsImapUser').value;
+                const pass = document.getElementById('settingsImapPass').value;
+                
+                const res = await fetch(`api/settings.php?action=test_imap&host=${encodeURIComponent(host)}&port=${port}&security=${encodeURIComponent(security)}&user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`, { headers: csrfHeaders() });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('IMAP connection successful!', 'success');
+                } else {
+                    showToast('IMAP failed: ' + data.error, 'error');
+                }
+            } catch (err) {
+                showToast('IMAP test failed', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Test IMAP';
+            }
+        }
 
         loadEmails(true);
     </script>
