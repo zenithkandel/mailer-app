@@ -1,27 +1,58 @@
 <?php
-require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/csrf.php';
+ob_start();
+error_reporting(0);
+ini_set('display_errors', 0);
 
 header('Content-Type: application/json');
 
-if (!isLoggedIn()) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized']);
+function outputJson($data, $code = 200) {
+    http_response_code($code);
+    echo json_encode($data);
     exit;
 }
 
-$config = loadConfig();
+set_exception_handler(function($e) {
+    outputJson([
+        'emails' => [],
+        'page' => 1,
+        'has_more' => false,
+        'total' => 0,
+        'unread_count' => 0,
+        'error' => 'Server error: ' . $e->getMessage()
+    ], 500);
+});
 
-if (!$config) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Server configuration error']);
-    exit;
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error && in_array($error['type'], [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        outputJson([
+            'emails' => [],
+            'page' => 1,
+            'has_more' => false,
+            'total' => 0,
+            'unread_count' => 0,
+            'error' => 'Fatal error: ' . $error['message']
+        ], 500);
+    }
+});
+
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/csrf.php';
+require_once __DIR__ . '/helpers.php';
+
+if (!isLoggedIn()) {
+    outputJson(['error' => 'Unauthorized', 'emails' => [], 'page' => 1, 'has_more' => false, 'total' => 0, 'unread_count' => 0], 401);
 }
 
 if (!function_exists('imap_open')) {
-    http_response_code(500);
-    echo json_encode(['error' => 'IMAP extension is not available. Please enable php_imap in php.ini.']);
-    exit;
+    outputJson([
+        'emails' => [],
+        'page' => 1,
+        'has_more' => false,
+        'total' => 0,
+        'unread_count' => 0,
+        'error' => 'IMAP extension is not available on this server. Please enable php_imap.dll in php.ini.'
+    ], 503);
 }
 
 $action = $_GET['action'] ?? '';
@@ -32,82 +63,92 @@ $offset = ($page - 1) * $perPage;
 
 if ($action === 'mark_read') {
     if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        http_response_code(405);
-        echo json_encode(['error' => 'Method not allowed']);
-        exit;
+        outputJson(['error' => 'Method not allowed'], 405);
     }
     $uid = intval($_GET['uid'] ?? 0);
     if ($uid <= 0) {
-        echo json_encode(['success' => false]);
-        exit;
+        outputJson(['success' => false]);
     }
     try {
+        $config = loadConfig();
         $imapConfig = $config['imap'] ?? [];
         $security = strtolower($imapConfig['security'] ?? 'ssl');
         $port = $imapConfig['port'] ?? 993;
-        $mailbox = ($security === 'ssl')
-            ? '{' . $imapConfig['host'] . ":{$port}/imap/ssl}INBOX"
-            : '{' . $imapConfig['host'] . ":{$port}}INBOX";
+        if ($security === 'ssl') {
+            $mailbox = '{' . $imapConfig['host'] . ':' . $port . '/imap/ssl}INBOX';
+        } else {
+            $mailbox = '{' . $imapConfig['host'] . ':' . $port . '}INBOX';
+        }
         $mbox = @imap_open($mailbox, $imapConfig['user'] ?? '', $imapConfig['pass'] ?? '');
         if ($mbox) {
             imap_setflag_full($mbox, $uid, '\\Seen');
             imap_close($mbox);
         }
-        echo json_encode(['success' => true]);
+        outputJson(['success' => true]);
     } catch (Exception $e) {
-        echo json_encode(['success' => false]);
+        outputJson(['success' => false]);
     }
-    exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    http_response_code(405);
-    echo json_encode(['error' => 'Method not allowed']);
-    exit;
+    outputJson(['error' => 'Method not allowed'], 405);
+}
+
+$config = loadConfig();
+if (!$config) {
+    outputJson(['error' => 'Server configuration error', 'emails' => [], 'page' => 1, 'has_more' => false, 'total' => 0, 'unread_count' => 0], 500);
 }
 
 $imapConfig = $config['imap'] ?? [];
 $security = strtolower($imapConfig['security'] ?? 'ssl');
 $port = $imapConfig['port'] ?? 993;
-$mailbox = ($security === 'ssl')
-    ? '{' . $imapConfig['host'] . ":{$port}/imap/ssl}INBOX"
-    : ($security === 'tls'
-        ? '{' . $imapConfig['host'] . ":{$port}/imap/tls}INBOX"
-        : '{' . $imapConfig['host'] . ":{$port}}INBOX");
+if ($security === 'ssl') {
+    $mailbox = '{' . $imapConfig['host'] . ':' . $port . '/imap/ssl}INBOX';
+} elseif ($security === 'tls') {
+    $mailbox = '{' . $imapConfig['host'] . ':' . $port . '/imap/tls}INBOX';
+} else {
+    $mailbox = '{' . $imapConfig['host'] . ':' . $port . '}INBOX';
+}
 
-$mbox = @imap_open($mailbox, $imapConfig['user'] ?? '', $imapConfig['pass'] ?? '');
+$user = $imapConfig['user'] ?? '';
+$pass = $imapConfig['pass'] ?? '';
+
+$mbox = @imap_open($mailbox, $user, $pass);
 
 if (!$mbox) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Failed to connect to IMAP server: ' . imap_last_error()]);
-    exit;
+    $err = imap_last_error() ?: 'Unknown connection error';
+    $isConnError = (strpos($err, 'connect') !== false || strpos($err, 'timed out') !== false || strpos($err, 'Couldn\'t open') !== false || $err === 'Unknown connection error');
+    outputJson([
+        'emails' => [],
+        'page' => $page,
+        'has_more' => false,
+        'total' => 0,
+        'unread_count' => 0,
+        'error' => 'Failed to connect to mail server: ' . $err
+    ], $isConnError ? 503 : 500);
 }
 
 if (!empty($search)) {
-    $searchResults = imap_search($mbox, 'ALL', SE_FREE, 'UTF-8');
-    if ($searchResults === false) $searchResults = [];
+    $allResults = @imap_search($mbox, 'ALL', SE_FREE, 'UTF-8');
+    if ($allResults === false) $allResults = [];
 
-    $sorted = [];
-    foreach ($searchResults as $msgNum) {
+    $filtered = [];
+    foreach ($allResults as $msgNum) {
         $h = @imap_headerinfo($mbox, $msgNum);
         if ($h === false) continue;
         $subj = decodeHeader($h->subject ?? '');
-        $fromNameObj = $h->from[0] ?? null;
-        $from = decodeHeader(implode(' ', array_filter([
-            $fromNameObj->personal ?? '',
-            $fromNameObj->mailbox ?? '',
-            $fromNameObj->host ?? ''
-        ])));
-        if (stripos($subj, $search) !== false || stripos($from, $search) !== false) {
-            $sorted[] = ['msgNum' => $msgNum, 'header' => $h];
+        $fromObj = $h->from[0] ?? null;
+        $fromName = $fromObj ? trim(($fromObj->personal ?? '') . ' ' . ($fromObj->mailbox ?? '') . ' ' . ($fromObj->host ?? '')) : '';
+        if (stripos($subj, $search) !== false || stripos($fromName, $search) !== false) {
+            $filtered[] = ['msgNum' => $msgNum, 'header' => $h];
         }
     }
-    usort($sorted, function($a, $b) {
+    usort($filtered, function($a, $b) {
         return strtotime($b['header']->date ?? '') <=> strtotime($a['header']->date ?? '');
     });
-    $searchResults = array_column($sorted, 'msgNum');
+    $searchResults = array_column($filtered, 'msgNum');
 } else {
-    $searchResults = imap_sort($mbox, SORTDATE, 1, SE_FREE, null, 'UTF-8');
+    $searchResults = imap_sort($mbox, SORTDATE, 1, 0, null, 'UTF-8');
     if ($searchResults === false) $searchResults = [];
 }
 
@@ -138,7 +179,6 @@ foreach ($slice as $msgNum) {
     $subject = $headers->subject ?? '(no subject)';
     $date = isset($headers->date) ? date('c', strtotime($headers->date)) : date('c');
     $msgNo = $headers->Msgno ?? $msgNum;
-
     $unread = isset($headers->Unseen) && $headers->Unseen === 'U';
 
     $overview = @imap_fetch_overview($mbox, $msgNo, 0);
@@ -168,7 +208,7 @@ foreach ($slice as $msgNum) {
 
 imap_close($mbox);
 
-echo json_encode([
+outputJson([
     'emails' => $emails,
     'page' => $page,
     'has_more' => $hasMore,
