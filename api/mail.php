@@ -201,43 +201,55 @@ if ($action === 'view') {
     $struct = @imap_fetchstructure($mbox, $id);
     $body = '';
     $attachments = [];
-    
-    if ($struct) {
-        if (!empty($struct->parts)) {
-            foreach ($struct->parts as $partNum => $part) {
-                $encoding = $part->encoding ?? 0;
-                $subtype = strtolower($part->subtype ?? '');
-                
-                if ($subtype === 'html') {
-                    $body = @imap_fetchbody($mbox, $id, $partNum + 1);
-                    $body = decodeBody($body, $encoding);
-                } elseif ($subtype === 'plain' && empty($body)) {
-                    $body = @imap_fetchbody($mbox, $id, $partNum + 1);
-                    $body = decodeBody($body, $encoding);
-                }
-                
-                if (!empty($part->parts)) {
-                    foreach ($part->parts as $subPartNum => $subPart) {
-                        if (!empty($subPart->dparameters)) {
-                            foreach ($subPart->dparameters as $param) {
-                                if (strpos($param->attribute, 'filename') !== false) {
-                                    $attachments[] = [
-                                        'name' => $param->value,
-                                        'part' => $partNum . '.' . ($subPartNum + 1),
-                                        'type' => $subPart->subtype ?? 'bin'
-                                    ];
-                                }
-                            }
-                        }
+
+    function extractBodyFromPart($mbox, $id, $part, $prefix = '') {
+        $result = ['body' => '', 'attachments' => []];
+        $encoding = $part->encoding ?? 0;
+        $subtype = strtolower($part->subtype ?? '');
+        $partId = $prefix ? ($prefix . '.' . ($part->part_number ?? '')) : ($part->part_number ?? '');
+
+        if ($subtype === 'html') {
+            $section = $partId ?: '1';
+            $raw = @imap_fetchbody($mbox, $id, $section);
+            $result['body'] = decodeBody($raw, $encoding);
+        } elseif ($subtype === 'plain' && empty($result['body'])) {
+            $section = $partId ?: '1';
+            $raw = @imap_fetchbody($mbox, $id, $section);
+            $result['body'] = decodeBody($raw, $encoding);
+        } elseif ($subtype === 'alternative' || $subtype === 'mixed' || $subtype === 'related') {
+            if (!empty($part->parts)) {
+                foreach ($part->parts as $subIdx => $subPart) {
+                    $subId = ($partId ? $partId . '.' : '') . ($subIdx + 1);
+                    $subResult = extractBodyFromPart($mbox, $id, $subPart, '');
+                    if ($subResult['body']) {
+                        $result['body'] = $subResult['body'];
                     }
+                    $result['attachments'] = array_merge($result['attachments'], $subResult['attachments']);
                 }
             }
-        } else {
-            $body = @imap_body($mbox, $id);
-            $body = decodeBody($body, $struct->encoding ?? 0);
         }
+
+        if (!empty($part->dparameters)) {
+            foreach ($part->dparameters as $param) {
+                if (strpos($param->attribute, 'filename') !== false) {
+                    $result['attachments'][] = [
+                        'name' => $param->value,
+                        'part' => $partId,
+                        'type' => $subtype
+                    ];
+                }
+            }
+        }
+
+        return $result;
     }
-    
+
+    if ($struct) {
+        $extracted = extractBodyFromPart($mbox, $id, $struct);
+        $body = $extracted['body'];
+        $attachments = $extracted['attachments'];
+    }
+
     if (empty($body)) {
         $body = @imap_body($mbox, $id);
         $body = decodeBody($body, 0);

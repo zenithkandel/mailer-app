@@ -60,14 +60,12 @@
         C.loading = true;
 
         const listEl = $('#emailList');
-        const detailEl = $('#emailDetail');
 
         if (reset) {
             C.page = 1;
             C.hasMore = true;
             emails = [];
             if (listEl) listEl.innerHTML = '';
-            if (detailEl) detailEl.innerHTML = '';
             selectedEmail = null;
         }
 
@@ -608,11 +606,11 @@
     }
 
     function openCompose() {
-        navigateTo('compose');
+        window.app.navigateTo('compose');
     }
 
     function closeCompose() {
-        navigateTo('inbox');
+        window.app.navigateTo('inbox');
     }
 
     async function sendEmail() {
@@ -834,16 +832,8 @@
                 });
             }
 
-            const composeModal = $('#composeModal');
-            if (composeModal) {
-                composeModal.addEventListener('click', (e) => {
-                    if (e.target === composeModal) closeCompose();
-                });
-            }
-
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') closeCompose();
-                if (e.ctrlKey && e.key === 'Enter') sendReply();
+                if (e.ctrlKey && e.key === 'Enter') window.app.sendReply();
             });
 
             window.addEventListener('popstate', () => {

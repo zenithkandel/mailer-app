@@ -52,7 +52,11 @@ body {
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    height: 100vh;
+    overflow: hidden;
 }
+
+html { height: 100%; }
 
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -403,10 +407,11 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
     background: var(--bg-base);
 }
 
-/* ===== TOPBAR ===== */
 .topbar {
     height: var(--nav-h);
     background: var(--bg-surface);
@@ -416,6 +421,12 @@ body {
     padding: 0 24px;
     gap: 16px;
     flex-shrink: 0;
+}
+
+#viewContainer {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .topbar-search {
