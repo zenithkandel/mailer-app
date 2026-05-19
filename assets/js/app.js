@@ -638,7 +638,7 @@
             if (!res.ok) throw new Error(data.error || 'Failed to send email');
 
             toast('Email sent successfully', 'success');
-            navigateTo('sent');
+            window.app.navigateTo('sent');
         } catch (err) {
             toast(err.message, 'error');
             if (btn) btn.disabled = false;

@@ -202,31 +202,20 @@ if ($action === 'view') {
     $body = '';
     $attachments = [];
 
-    function extractBodyFromPart($mbox, $id, $part, $prefix = '') {
+function extractBodyFromPart($mbox, $id, $part, $prefix = '') {
         $result = ['body' => '', 'attachments' => []];
         $encoding = $part->encoding ?? 0;
         $subtype = strtolower($part->subtype ?? '');
-        $partId = $prefix ? ($prefix . '.' . ($part->part_number ?? '')) : ($part->part_number ?? '');
+        $partNum = $part->part_number ?? '';
 
         if ($subtype === 'html') {
-            $section = $partId ?: '1';
+            $section = $partNum ?: '1';
             $raw = @imap_fetchbody($mbox, $id, $section);
             $result['body'] = decodeBody($raw, $encoding);
         } elseif ($subtype === 'plain' && empty($result['body'])) {
-            $section = $partId ?: '1';
+            $section = $partNum ?: '1';
             $raw = @imap_fetchbody($mbox, $id, $section);
             $result['body'] = decodeBody($raw, $encoding);
-        } elseif ($subtype === 'alternative' || $subtype === 'mixed' || $subtype === 'related') {
-            if (!empty($part->parts)) {
-                foreach ($part->parts as $subIdx => $subPart) {
-                    $subId = ($partId ? $partId . '.' : '') . ($subIdx + 1);
-                    $subResult = extractBodyFromPart($mbox, $id, $subPart, '');
-                    if ($subResult['body']) {
-                        $result['body'] = $subResult['body'];
-                    }
-                    $result['attachments'] = array_merge($result['attachments'], $subResult['attachments']);
-                }
-            }
         }
 
         if (!empty($part->dparameters)) {
@@ -234,18 +223,28 @@ if ($action === 'view') {
                 if (strpos($param->attribute, 'filename') !== false) {
                     $result['attachments'][] = [
                         'name' => $param->value,
-                        'part' => $partId,
+                        'part' => $partNum,
                         'type' => $subtype
                     ];
                 }
             }
         }
 
+        if (!empty($part->parts)) {
+            foreach ($part->parts as $subIdx => $subPart) {
+                $subResult = extractBodyFromPart($mbox, $id, $subPart, '');
+                if ($subResult['body'] && empty($result['body'])) {
+                    $result['body'] = $subResult['body'];
+                }
+                $result['attachments'] = array_merge($result['attachments'], $subResult['attachments']);
+            }
+        }
+
         return $result;
     }
 
-    if ($struct) {
-        $extracted = extractBodyFromPart($mbox, $id, $struct);
+if ($struct) {
+        $extracted = extractBodyFromPart($mbox, $id, $struct, '');
         $body = $extracted['body'];
         $attachments = $extracted['attachments'];
     }
@@ -254,7 +253,7 @@ if ($action === 'view') {
         $body = @imap_body($mbox, $id);
         $body = decodeBody($body, 0);
     }
-    
+
     $fromObj = $header->from[0] ?? null;
     $toObj = $header->to[0] ?? null;
     $replyToObj = $header->reply_to[0] ?? null;

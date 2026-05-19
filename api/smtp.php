@@ -101,7 +101,8 @@ public function sendEmail($to, $subject, $body, $toName = '', $cc = '', $bcc = '
         $headers[] = "Content-Transfer-Encoding: quoted-printable";
         $headers[] = "";
 
-        $encodedBody = quoted_printable_encode($body);
+        $encodedBody = str_replace("\n", "\r\n", quoted_printable_encode($body));
+        $encodedBody = preg_replace('/=(?:\r?\n|$)/', '', $encodedBody);
         $headers[] = $encodedBody;
         $headers[] = "";
         $headers[] = "--{$boundary}--";
@@ -110,49 +111,6 @@ public function sendEmail($to, $subject, $body, $toName = '', $cc = '', $bcc = '
         $message = implode("\r\n", $headers);
         fwrite($this->socket, $message . "\r\n");
         $response = $this->send(".");
-        fclose($this->socket);
-
-        if ($this->isSuccess($response)) {
-            return ['success' => true];
-        }
-        return ['success' => false, 'error' => substr($response, 4)];
-    }
-
-        $this->send("EHLO localhost");
-        if ($this->security === 'tls') {
-            $this->send("STARTTLS");
-            stream_socket_enable_crypto($this->socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
-            $this->send("EHLO localhost");
-        }
-
-        $this->send("AUTH LOGIN");
-        $this->send(base64_encode($this->user));
-        $this->send(base64_encode($this->pass));
-
-        $this->send("MAIL FROM:<{$this->fromEmail}>");
-        $this->send("RCPT TO:<{$to}>");
-        if ($cc) $this->send("RCPT TO:<{$cc}>");
-        if ($bcc) $this->send("RCPT TO:<{$bcc}>");
-
-        $this->send("DATA");
-
-        $headers = [
-            "From: {$this->fromName} <{$this->fromEmail}>",
-            "To: " . ($toName ? "{$toName} <{$to}>" : $to),
-            "Subject: {$subject}",
-            "MIME-Version: 1.0",
-            "Content-Type: text/html; charset=UTF-8",
-            "Date: " . date('r')
-        ];
-
-        if ($replyTo) $headers[] = "Reply-To: {$replyTo}";
-        if ($cc) $headers[] = "Cc: {$cc}";
-
-        $headers[] = "";
-        $headers[] = $body;
-        $headers[] = ".";
-
-        $response = $this->send(implode("\r\n", $headers));
         fclose($this->socket);
 
         if ($this->isSuccess($response)) {
