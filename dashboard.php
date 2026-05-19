@@ -1386,7 +1386,16 @@ $csrfToken = csrfGenerate();
         function renderEmailList() {
             const list = document.getElementById('emailList');
             
+            const viewLabels = {
+                'inbox': 'Inbox',
+                'sent': 'Sent',
+                'drafts': 'Drafts',
+                'starred': 'Starred',
+                'trash': 'Trash'
+            };
+            
             if (state.emails.length === 0) {
+                const viewName = viewLabels[state.currentView] || 'Inbox';
                 list.innerHTML = `
                     <li class="empty-state">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -1394,7 +1403,7 @@ $csrfToken = csrfGenerate();
                             <polyline points="22,6 12,13 2,6"/>
                         </svg>
                         <h3>No emails found</h3>
-                        <p>${state.search ? 'Try a different search term' : 'Your inbox is empty'}</p>
+                        <p>${state.search ? 'Try a different search term' : 'Your ' + viewName.toLowerCase() + ' is empty'}</p>
                     </li>
                 `;
                 return;
@@ -1766,7 +1775,7 @@ $csrfToken = csrfGenerate();
             window.location.href = 'index.php';
         });
 
-        document.querySelectorAll('.nav-link').forEach(link => {
+        document.querySelectorAll('.nav-link[data-view]').forEach(link => {
             link.addEventListener('click', () => {
                 document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
                 link.classList.add('active');

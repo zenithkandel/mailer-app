@@ -200,10 +200,10 @@ if ($action === 'view') {
                 $encoding = $part->encoding ?? 0;
                 $subtype = strtolower($part->subtype ?? '');
                 
-                if ($subtype === 'plain' && empty($body)) {
+                if ($subtype === 'html') {
                     $body = @imap_fetchbody($mbox, $id, $partNum + 1);
                     $body = decodeBody($body, $encoding);
-                } elseif ($subtype === 'html' && empty($body)) {
+                } elseif ($subtype === 'plain' && empty($body)) {
                     $body = @imap_fetchbody($mbox, $id, $partNum + 1);
                     $body = decodeBody($body, $encoding);
                 }
