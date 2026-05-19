@@ -2,7 +2,6 @@
   "app_name": "Zenith Mail",
   "admin_user": "admin",
   "admin_pass": "8038@Zenith",
-
   "smtp": {
     "host": "mail.zenithkandel.com.np",
     "port": 465,
@@ -12,12 +11,23 @@
     "from_email": "admin@zenithkandel.com.np",
     "from_name": "ZenithKandel"
   },
-
   "imap": {
     "host": "mail.zenithkandel.com.np",
     "port": 993,
     "security": "ssl",
     "user": "admin@zenithkandel.com.np",
-    "pass": "8038@Zenith"
+    "pass": "8038@Zenith",
+    "folders": {
+      "inbox": "INBOX",
+      "sent": "Sent",
+      "drafts": "Drafts",
+      "starred": "Starred",
+      "trash": "Trash"
+    }
+  },
+  "settings": {
+    "per_page": 25,
+    "preview_length": 100,
+    "theme": "light"
   }
 }
