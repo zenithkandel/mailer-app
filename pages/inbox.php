@@ -1,21 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inbox</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
+
 <body>
     <div class="page-container">
         <div class="page-toolbar">
             <button class="btn btn-secondary btn-sm" onclick="loadEmails(true)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10" />
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                </svg>
                 Refresh
             </button>
             <div style="flex:1"></div>
             <div class="search-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
                 <input type="text" id="searchInput" placeholder="Search emails...">
             </div>
         </div>
@@ -24,13 +32,19 @@
         </div>
         <div class="email-list-container">
             <div class="email-list" id="emailList">
-                <div class="empty-state"><p>Loading...</p></div>
+                <div class="empty-state">
+                    <p>Loading...</p>
+                </div>
             </div>
             <div class="load-more-container hidden" id="loadMoreContainer">
                 <button class="btn btn-secondary" id="loadMoreBtn">Load More</button>
             </div>
             <div class="empty-state hidden" id="emptyState">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+                    <path
+                        d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+                </svg>
                 <p>No emails found</p>
             </div>
         </div>
@@ -197,67 +211,72 @@
         });
     </script>
 </body>
+
 </html>
-            color: var(--text-muted);
-            margin-left: 12px;
-            flex-shrink: 0;
-        }
+color: var(--text-muted);
+margin-left: 12px;
+flex-shrink: 0;
+}
 
-        .empty-state {
-            padding: 60px 20px;
-            text-align: center;
-            color: var(--text-muted);
-        }
+.empty-state {
+padding: 60px 20px;
+text-align: center;
+color: var(--text-muted);
+}
 
-        .empty-state svg {
-            width: 48px;
-            height: 48px;
-            margin-bottom: 12px;
-            opacity: 0.5;
-        }
+.empty-state svg {
+width: 48px;
+height: 48px;
+margin-bottom: 12px;
+opacity: 0.5;
+}
 
-        .empty-state h3 { font-size: 16px; margin-bottom: 6px; color: var(--text-secondary); }
+.empty-state h3 { font-size: 16px; margin-bottom: 6px; color: var(--text-secondary); }
 
-        .loading {
-            padding: 40px;
-            text-align: center;
-            color: var(--text-muted);
-        }
+.loading {
+padding: 40px;
+text-align: center;
+color: var(--text-muted);
+}
 
-        .toast-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 2000;
-        }
+.toast-container {
+position: fixed;
+bottom: 20px;
+right: 20px;
+z-index: 2000;
+}
 
-        .toast {
-            background: var(--text-primary);
-            color: white;
-            padding: 12px 16px;
-            font-size: 13px;
-            margin-top: 8px;
-            box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
-        }
+.toast {
+background: var(--text-primary);
+color: white;
+padding: 12px 16px;
+font-size: 13px;
+margin-top: 8px;
+box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+}
 
-        .toast.success { background: var(--success); }
-        .toast.error { background: var(--danger); }
-    </style>
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
+</style>
 </head>
+
 <body>
     <div class="page-container">
         <div class="toolbar">
             <button class="toolbar-btn" onclick="parent.loadEmails(true)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                    <polyline points="23 4 23 10 17 10" />
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                 </svg>
                 Refresh
             </button>
             <div class="search-box">
                 <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
-                <input type="text" class="search-input" id="searchInput" placeholder="Search..." value="<?= sanitize($search) ?>">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search..."
+                    value="<?= sanitize($search) ?>">
             </div>
         </div>
 
@@ -351,7 +370,7 @@
 
         function renderEmailList() {
             const list = document.getElementById('emailList');
-            
+
             if (state.emails.length === 0) {
                 const viewName = '<?= $viewTitle ?>';
                 list.innerHTML = `
@@ -403,4 +422,5 @@
         loadEmails(true);
     </script>
 </body>
+
 </html>

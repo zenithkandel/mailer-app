@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Compose</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
+
 <body>
     <div class="compose-page">
         <h2>New Message</h2>
@@ -14,11 +16,13 @@
         <form class="compose-form" id="composeForm">
             <div class="form-group">
                 <label for="composeTo">To</label>
-                <input type="email" id="composeTo" placeholder="recipient@example.com" value="<?= sanitize($reply_to) ?>" required>
+                <input type="email" id="composeTo" placeholder="recipient@example.com"
+                    value="<?= sanitize($reply_to) ?>" required>
             </div>
             <div class="form-group">
                 <label for="composeSubject">Subject</label>
-                <input type="text" id="composeSubject" placeholder="Subject" value="<?= $is_forward ? 'Fwd: ' . sanitize($reply_subject) : ($reply_id ? 'Re: ' . sanitize($reply_subject) : '') ?>">
+                <input type="text" id="composeSubject" placeholder="Subject"
+                    value="<?= $is_forward ? 'Fwd: ' . sanitize($reply_subject) : ($reply_id ? 'Re: ' . sanitize($reply_subject) : '') ?>">
             </div>
             <div class="form-group">
                 <label for="composeBody">Message</label>
@@ -26,7 +30,10 @@
             </div>
             <div class="compose-actions">
                 <button type="submit" class="btn btn-primary" id="sendBtn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
                     Send
                 </button>
             </div>
@@ -87,5 +94,5 @@
         });
     </script>
 </body>
+
 </html>
-            
