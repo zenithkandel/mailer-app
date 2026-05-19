@@ -1,91 +1,245 @@
 <?php
 require_once __DIR__ . '/api/config.php';
-require_once __DIR__ . '/api/csrf.php';
-require_once __DIR__ . '/api/helpers.php';
 
 if (isLoggedIn()) {
     header('Location: dashboard.php');
     exit;
 }
 
-$error = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $csrf = $_POST['csrf_token'] ?? '';
-
-    if (!hash_equals($_SESSION['csrf_token'] ?? '', $csrf)) {
-        $error = 'Invalid request.';
-    } else {
-        $config = loadConfig();
-        if ($config && $username === ($config['admin_user'] ?? '') && $password === ($config['admin_pass'] ?? '')) {
-            session_regenerate_id(true);
-            $_SESSION['logged_in'] = true;
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-            header('Location: dashboard.php');
-            exit;
-        } else {
-            $error = 'Invalid username or password.';
-        }
-    }
-}
-
-$csrfToken = csrfToken();
+$config = loadConfig();
+$appName = $config['app_name'] ?? 'Zenith Mail';
+$csrfToken = csrfGenerate();
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In — Zenith Mail</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23E87B35'/><path d='M6 10h20v14H6z' fill='none' stroke='white' stroke-width='2'/><path d='M6 10l10 8 10-8' fill='none' stroke='white' stroke-width='2'/></svg>">
+    <title>Login — <?= sanitize($appName) ?></title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #e8dcc8 0%, #d4c4a8 50%, #c9b896 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: #f5f0e6;
+            border: 2px solid #8b7355;
+            border-radius: 0;
+            box-shadow: 8px 8px 0 rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 420px;
+            padding: 40px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-logo {
+            width: 64px;
+            height: 64px;
+            background: #e87b35;
+            border-radius: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+        }
+
+        .login-logo svg {
+            width: 36px;
+            height: 36px;
+            fill: white;
+        }
+
+        .login-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4a3f35;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            font-size: 14px;
+            color: #7a6b5a;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #5a4f45;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 15px;
+            border: 2px solid #c9b896;
+            border-radius: 0;
+            background: #fff;
+            color: #4a3f35;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #e87b35;
+            box-shadow: 0 0 0 3px rgba(232, 123, 53, 0.15);
+        }
+
+        .form-input::placeholder {
+            color: #a09080;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 15px;
+            font-weight: 700;
+            color: white;
+            background: #e87b35;
+            border: 2px solid #c96a2d;
+            border-radius: 0;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .login-btn:hover {
+            background: #d66a2a;
+            transform: translateY(-2px);
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.15);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: #f8e8e8;
+            border: 2px solid #d66;
+            color: #a33;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .login-footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 12px;
+            color: #8a7a6a;
+        }
+    </style>
 </head>
-<body class="login-page">
+<body>
     <div class="login-container">
-        <div class="login-card">
+        <div class="login-header">
             <div class="login-logo">
-                <svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="32" height="32" rx="6" fill="#E87B35"/>
-                    <path d="M6 10h20v14H6z" stroke="white" stroke-width="2" fill="none"/>
-                    <path d="M6 10l10 8 10-8" stroke="white" stroke-width="2" fill="none"/>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
                 </svg>
             </div>
-            <h1 class="login-title">Zenith Mail</h1>
-            <p class="login-subtitle">Sign in to your admin account</p>
+            <h1 class="login-title"><?= sanitize($appName) ?></h1>
+            <p class="login-subtitle">Sign in to access your mailbox</p>
+        </div>
 
-            <?php if ($error): ?>
-            <div class="login-error">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                <?= sanitizeOutput($error) ?>
+        <div class="error-message" id="errorMessage"></div>
+
+        <form id="loginForm">
+            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+            
+            <div class="form-group">
+                <label class="form-label" for="username">Username</label>
+                <input type="text" class="form-input" id="username" name="username" placeholder="Enter your username" required autocomplete="username">
             </div>
-            <?php endif; ?>
 
-            <form method="POST" action="index.php" class="login-form" id="loginForm">
-                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" placeholder="admin" required autocomplete="username">
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
-                </div>
-                <button type="submit" class="btn-primary btn-full" id="loginBtn">
-                    <span>Sign In</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                </button>
-            </form>
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" class="form-input" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="login-btn" id="loginBtn">Sign In</button>
+        </form>
+
+        <div class="login-footer">
+            &copy; <?= date('Y') ?> <?= sanitize($appName) ?>
         </div>
     </div>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const errorMsg = document.getElementById('errorMessage');
+        const loginBtn = document.getElementById('loginBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMsg.classList.remove('show');
+            errorMsg.textContent = '';
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Signing in...';
+
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('api/auth.php?action=login', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    errorMsg.textContent = data.error || 'Login failed';
+                    errorMsg.classList.add('show');
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Sign In';
+                }
+            } catch (err) {
+                errorMsg.textContent = 'Network error. Please try again.';
+                errorMsg.classList.add('show');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Sign In';
+            }
+        });
+    </script>
 </body>
 </html>
