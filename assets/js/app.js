@@ -51,7 +51,7 @@
     }
 
     function getViewTitle(view) {
-        const titles = { inbox: 'Inbox', sent: 'Sent', drafts: 'Drafts', starred: 'Starred', trash: 'Trash', settings: 'Settings' };
+        const titles = { inbox: 'Inbox', sent: 'Sent', drafts: 'Drafts', starred: 'Starred', trash: 'Trash', settings: 'Settings', compose: 'New Message' };
         return titles[view] || 'Mail';
     }
 
@@ -587,13 +587,8 @@
             if (!data.success) throw new Error(data.error);
 
             toast('Email deleted', 'success');
-            emails = emails.filter(e => e.id != id);
-            if (selectedEmail?.id == id) {
-                selectedEmail = null;
-                window.app.closeEmail(true);
-            }
-            renderEmailList();
-            renderEmptyOrList();
+            selectedEmail = null;
+            renderMainContent();
         } catch (err) {
             toast(err.message, 'error');
         }

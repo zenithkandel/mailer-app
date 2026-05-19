@@ -85,38 +85,46 @@ if ($action === 'unread_count') {
 
 if (in_array($action, ['inbox', 'sent', 'drafts', 'trash', 'starred'])) {
     $folder = $folders[$action] ?? 'INBOX';
-    $folder = $action === 'starred' ? $folders['inbox'] : $folder;
-    
+
     $page = max(1, (int)($_GET['page'] ?? 1));
     $search = trim($_GET['search'] ?? '');
     $perPage = $settings['per_page'] ?? 25;
     $offset = ($page - 1) * $perPage;
-    
+
     $mailbox = getMailbox($config) . $folder;
     $mbox = @imap_open($mailbox, $imapConfig['user'], $imapConfig['pass']);
-    
+
     if (!$mbox) {
         outputJson(['emails' => [], 'page' => $page, 'has_more' => false, 'total' => 0, 'unread' => 0, 'error' => imap_last_error()]);
     }
-    
+
     $results = [];
-    if (!empty($search)) {
+
+    if ($action === 'starred') {
+        $flagged = @imap_search($mbox, 'FLAGGED');
+        $results = $flagged ?: [];
+        usort($results, function($a, $b) use ($mbox) {
+            $ha = @imap_headerinfo($mbox, $a);
+            $hb = @imap_headerinfo($mbox, $b);
+            return strtotime($hb->date ?? 0) <=> strtotime($ha->date ?? 0);
+        });
+    } elseif (!empty($search)) {
         $all = @imap_search($mbox, 'ALL');
         if ($all === false) $all = [];
-        
+
         foreach ($all as $msg) {
             $h = @imap_headerinfo($mbox, $msg);
             if ($h === false) continue;
-            
+
             $subj = decodeHeaderStr($h->subject ?? '');
             $from = getDisplayName($h->from[0] ?? null);
             $to = getDisplayName($h->to[0] ?? null);
-            
+
             if (stripos($subj, $search) !== false || stripos($from, $search) !== false || stripos($to, $search) !== false) {
                 $results[] = $msg;
             }
         }
-        
+
         usort($results, function($a, $b) use ($mbox) {
             $ha = imap_headerinfo($mbox, $a);
             $hb = imap_headerinfo($mbox, $b);

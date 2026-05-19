@@ -21,6 +21,7 @@ $initial = strtoupper(substr($username, 0, 1));
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= sanitize($appName) ?></title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/quill/2.0.2/quill.snow.min.css" rel="stylesheet">
     <script>
     window.APP_CONFIG = {
         csrfToken: '<?= $csrfToken ?>',
@@ -50,7 +51,7 @@ $initial = strtoupper(substr($username, 0, 1));
         </div>
 
         <div class="sidebar-compose">
-            <button class="compose-btn" onclick="window.app.openCompose()">
+            <button class="compose-btn" onclick="return window.app.navigateTo('compose')">
                 <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Compose
             </button>
@@ -132,48 +133,9 @@ $initial = strtoupper(substr($username, 0, 1));
     </div>
 </div>
 
-<div class="modal-overlay" id="composeModal">
-    <div class="modal">
-        <div class="modal-header">
-            <h3>New Message</h3>
-            <button class="modal-close" onclick="window.app.closeCompose()">
-                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-        </div>
-        <div class="modal-body">
-            <form class="compose-form" id="composeForm">
-                <div class="form-row">
-                    <label for="composeTo">To</label>
-                    <input type="email" id="composeTo" placeholder="recipient@example.com" required>
-                </div>
-                <div class="form-row">
-                    <label for="composeSubject">Subject</label>
-                    <input type="text" id="composeSubject" placeholder="Subject" required>
-                </div>
-                <div class="form-row">
-                    <label for="composeBody">Message</label>
-                    <textarea id="composeBody" placeholder="Write your message..."></textarea>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <div class="modal-footer-left">
-                <button class="btn btn-ghost" onclick="window.app.closeCompose()">Discard</button>
-            </div>
-            <button class="btn btn-secondary" onclick="window.app.saveDraft()">
-                <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                Save Draft
-            </button>
-            <button class="btn btn-primary" id="sendBtn" onclick="window.app.sendEmail()">
-                <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                Send
-            </button>
-        </div>
-    </div>
-</div>
-
 <div class="toast-container" id="toastContainer"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quill/2.0.2/quill.min.js" integrity="sha512-1nmY9t9/Iq3JU1fGf0OpNCn6uXMmwC1XYX9a6547vnfcjCY1KvU9TE5e8jHQvXBoEH7hcKLIbbOjneZ8HCeNLA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="assets/js/app.js"></script>
 </body>
 </html>
