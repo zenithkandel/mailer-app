@@ -44,27 +44,27 @@ if ($action === 'get') {
 
 if ($action === 'save') {
     requireLogin();
-    
+
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         http_response_code(405);
         echo json_encode(['error' => 'Method not allowed']);
         exit;
     }
-    
+
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true);
     if (!$data) $data = $_POST;
-    
+
     if (!csrfValidate($data['csrf_token'] ?? '')) {
         http_response_code(403);
         echo json_encode(['error' => 'Invalid token']);
         exit;
     }
-    
+
     $configFile = __DIR__ . '/../data/config.json';
-    
+
     $existing = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
-    
+
     $newConfig = [
         'app_name' => $data['app_name'] ?? $existing['app_name'] ?? 'Zenith Mail',
         'admin_user' => $data['admin_user'] ?? $existing['admin_user'] ?? '',
@@ -84,18 +84,28 @@ if ($action === 'save') {
             'security' => $data['imap_security'] ?? $existing['imap']['security'] ?? 'ssl',
             'user' => $data['imap_user'] ?? $existing['imap']['user'] ?? '',
             'pass' => !empty($data['imap_pass']) ? $data['imap_pass'] : ($existing['imap']['pass'] ?? ''),
-            'folders' => $existing['imap']['folders'] ?? ['inbox' => 'INBOX', 'sent' => 'Sent', 'drafts' => 'Drafts', 'trash' => 'Trash']
+            'folders' => [
+                'inbox' => $data['folder_inbox'] ?? $existing['imap']['folders']['inbox'] ?? 'INBOX',
+                'sent' => $data['folder_sent'] ?? $existing['imap']['folders']['sent'] ?? 'Sent',
+                'drafts' => $data['folder_drafts'] ?? $existing['imap']['folders']['drafts'] ?? 'Drafts',
+                'trash' => $data['folder_trash'] ?? $existing['imap']['folders']['trash'] ?? 'Trash',
+                'starred' => $data['folder_starred'] ?? $existing['imap']['folders']['starred'] ?? 'Starred'
+            ]
         ],
-        'settings' => $existing['settings'] ?? ['per_page' => 25, 'preview_length' => 100, 'theme' => 'light']
+        'settings' => [
+            'per_page' => (int)($data['per_page'] ?? $existing['settings']['per_page'] ?? 25),
+            'preview_length' => (int)($existing['settings']['preview_length'] ?? 100),
+            'theme' => $existing['settings']['theme'] ?? 'light'
+        ]
     ];
-    
+
     $json = json_encode($newConfig, JSON_PRETTY_PRINT);
-    
+
     if (file_put_contents($configFile, $json) === false) {
         echo json_encode(['error' => 'Failed to save configuration']);
         exit;
     }
-    
+
     echo json_encode(['success' => true, 'message' => 'Settings saved successfully']);
     exit;
 }

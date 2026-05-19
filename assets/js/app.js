@@ -365,6 +365,44 @@
                             <button class="test-btn" id="testImapBtn" onclick="window.app.testImap()">Test IMAP</button>
                         </div>
                     </div>
+                    <div class="settings-section">
+                        <div class="settings-section-header">IMAP Folder Names</div>
+                        <div class="settings-section-body">
+                            <div class="settings-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Inbox</label>
+                                    <input type="text" class="form-control" id="sFolderInbox" placeholder="INBOX">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Sent</label>
+                                    <input type="text" class="form-control" id="sFolderSent" placeholder="Sent">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Drafts</label>
+                                    <input type="text" class="form-control" id="sFolderDrafts" placeholder="Drafts">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Trash</label>
+                                    <input type="text" class="form-control" id="sFolderTrash" placeholder="Trash">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Starred</label>
+                                    <input type="text" class="form-control" id="sFolderStarred" placeholder="Starred">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <div class="settings-section-header">Display Settings</div>
+                        <div class="settings-section-body">
+                            <div class="settings-grid">
+                                <div class="form-group" style="grid-column: 1 / -1;">
+                                    <label class="form-label">Emails Per Page</label>
+                                    <input type="number" class="form-control" id="sPerPage" min="5" max="100" value="25">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="settings-footer">
                         <button class="btn btn-primary" onclick="window.app.saveSettings()">
                             <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
@@ -447,9 +485,6 @@
             setTimeout(initQuillEditor, 200);
             return;
         }
-        if (quillEditor) {
-            quillEditor = null;
-        }
         quillEditor = new Quill('#composeEditor', {
             theme: 'snow',
             placeholder: 'Write your message...',
@@ -484,6 +519,12 @@
             if (id('sImapPort')) id('sImapPort').value = d.imap?.port || 993;
             if (id('sImapSecurity')) id('sImapSecurity').value = d.imap?.security || 'ssl';
             if (id('sImapUser')) id('sImapUser').value = d.imap?.user || '';
+            if (id('sFolderInbox')) id('sFolderInbox').value = d.imap?.folders?.inbox || 'INBOX';
+            if (id('sFolderSent')) id('sFolderSent').value = d.imap?.folders?.sent || 'Sent';
+            if (id('sFolderDrafts')) id('sFolderDrafts').value = d.imap?.folders?.drafts || 'Drafts';
+            if (id('sFolderTrash')) id('sFolderTrash').value = d.imap?.folders?.trash || 'Trash';
+            if (id('sFolderStarred')) id('sFolderStarred').value = d.imap?.folders?.starred || 'Starred';
+            if (id('sPerPage')) id('sPerPage').value = d.settings?.per_page || 25;
         } catch (e) { toast('Failed to load settings', 'error'); }
     }
 
@@ -505,7 +546,13 @@
             imap_port: parseInt(id('sImapPort')?.value) || 993,
             imap_security: id('sImapSecurity')?.value || 'ssl',
             imap_user: id('sImapUser')?.value || '',
-            imap_pass: id('sImapPass')?.value || ''
+            imap_pass: id('sImapPass')?.value || '',
+            folder_inbox: id('sFolderInbox')?.value || 'INBOX',
+            folder_sent: id('sFolderSent')?.value || 'Sent',
+            folder_drafts: id('sFolderDrafts')?.value || 'Drafts',
+            folder_trash: id('sFolderTrash')?.value || 'Trash',
+            folder_starred: id('sFolderStarred')?.value || 'Starred',
+            per_page: parseInt(id('sPerPage')?.value) || 25
         };
         try {
             const res = await fetch('api/settings.php?action=save', {
@@ -555,73 +602,60 @@
         btn.disabled = false;
     }
 
+    function getEditorContent() {
+        if (!quillEditor) return '';
+        return quillEditor.root.innerHTML;
+    }
+
     function openCompose() {
-        $('#composeModal').classList.add('active');
-        $('#composeTo').value = '';
-        $('#composeSubject').value = '';
-        $('#composeBody').value = '';
-        $('#composeTo').focus();
+        navigateTo('compose');
     }
 
     function closeCompose() {
-        $('#composeModal').classList.remove('active');
+        navigateTo('inbox');
     }
 
     async function sendEmail() {
-        const btn = $('#sendBtn');
-        const to = $('#composeTo').value.trim();
-        const subject = $('#composeSubject').value.trim();
-        const body = $('#composeBody').value;
+        const btn = $('#composeSendBtn');
+        const to = $('#composeTo')?.value.trim() || '';
+        const subject = $('#composeSubject')?.value.trim() || '';
+        const body = getEditorContent();
 
         if (!to) { toast('Please enter a recipient', 'error'); return; }
         if (!subject) { toast('Please enter a subject', 'error'); return; }
-        if (!body) { toast('Please enter a message', 'error'); return; }
+        if (!body || body === '<p><br></p>') { toast('Please write a message', 'error'); return; }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(to)) { toast('Please enter a valid email address', 'error'); return; }
 
-        if (btn) { btn.disabled = true; btn.querySelector('span')?.remove; }
-        const btnText = btn?.querySelector('svg')?.nextSibling || btn?.lastChild;
-        if (btnText) btnText.textContent = 'Sending...';
+        if (btn) btn.disabled = true;
 
         try {
-            const formData = new FormData();
-            formData.append('to', to);
-            formData.append('subject', subject);
-            formData.append('body', body);
-            formData.append('csrf_token', C.csrfToken);
-
             const res = await fetch('api/mail.php?action=send', {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': C.csrfToken },
-                body: formData
+                body: new URLSearchParams({ to, subject, body, csrf_token: C.csrfToken })
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Failed to send email');
 
             toast('Email sent successfully', 'success');
-            closeCompose();
-
-            if (C.currentView === 'sent') {
-                C.page = 1;
-                C.hasMore = true;
-                emails = [];
-                loadEmails();
-            }
+            navigateTo('sent');
         } catch (err) {
             toast(err.message, 'error');
-        } finally {
-            if (btn) { btn.disabled = false; }
-            if (btnText) btnText.textContent = 'Send';
+            if (btn) btn.disabled = false;
         }
     }
 
     async function saveDraft() {
-        const to = $('#composeTo').value.trim();
-        const subject = $('#composeSubject').value.trim();
-        const body = $('#composeBody').value;
+        const to = $('#composeTo')?.value.trim() || '';
+        const subject = $('#composeSubject')?.value.trim() || '';
+        const body = getEditorContent();
 
-        if (!to && !subject && !body) { toast('Nothing to save', 'info'); return; }
+        if (!to && !subject && (!body || body === '<p><br></p>')) {
+            toast('Nothing to save', 'info');
+            return;
+        }
 
         try {
             const res = await fetch('api/mail.php?action=draft', {
@@ -632,7 +666,6 @@
             const data = await res.json();
             if (data.success) {
                 toast('Draft saved', 'success');
-                closeCompose();
             } else {
                 throw new Error(data.error);
             }
@@ -705,19 +738,22 @@
 
     function replyToEmail() {
         if (!selectedEmail) return;
-        openCompose();
+        C.currentView = 'compose';
+        renderMainContent();
         setTimeout(() => {
-            $('#composeTo').value = selectedEmail.from || '';
-            $('#composeSubject').value = selectedEmail.subject?.startsWith('Re:') ? selectedEmail.subject : 'Re: ' + (selectedEmail.subject || '');
+            if ($('#composeTo')) $('#composeTo').value = selectedEmail.from || '';
+            if ($('#composeSubject')) $('#composeSubject').value = selectedEmail.subject?.startsWith('Re:') ? selectedEmail.subject : 'Re: ' + (selectedEmail.subject || '');
+            initQuillEditor();
         }, 100);
     }
 
     function forwardEmail() {
         if (!selectedEmail) return;
-        openCompose();
+        C.currentView = 'compose';
+        renderMainContent();
         setTimeout(() => {
-            $('#composeSubject').value = selectedEmail.subject?.startsWith('Fwd:') ? selectedEmail.subject : 'Fwd: ' + (selectedEmail.subject || '');
-            $('#composeBody').value = selectedEmail.body || '';
+            if ($('#composeSubject')) $('#composeSubject').value = selectedEmail.subject?.startsWith('Fwd:') ? selectedEmail.subject : 'Fwd: ' + (selectedEmail.subject || '');
+            initQuillEditor();
         }, 100);
     }
 
