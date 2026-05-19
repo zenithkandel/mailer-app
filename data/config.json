@@ -1,6 +1,6 @@
 {
   "app_name": "Zenith Mail",
-  "admin_user": "admin",
+  "admin_user": "admin@zenithkandel.com.np",
   "admin_pass": "8038@Zenith",
   "smtp": {
     "host": "mail.zenithkandel.com.np",
