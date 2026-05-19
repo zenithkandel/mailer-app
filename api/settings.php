@@ -68,13 +68,13 @@ if ($action === 'save') {
     $newConfig = [
         'app_name' => $data['app_name'] ?? $existing['app_name'] ?? 'Zenith Mail',
         'admin_user' => $data['admin_user'] ?? $existing['admin_user'] ?? '',
-        'admin_pass' => $data['admin_pass'] ?? $existing['admin_pass'] ?? '',
+        'admin_pass' => !empty($data['admin_pass']) ? $data['admin_pass'] : ($existing['admin_pass'] ?? ''),
         'smtp' => [
             'host' => $data['smtp_host'] ?? $existing['smtp']['host'] ?? '',
             'port' => (int)($data['smtp_port'] ?? $existing['smtp']['port'] ?? 465),
             'security' => $data['smtp_security'] ?? $existing['smtp']['security'] ?? 'ssl',
             'user' => $data['smtp_user'] ?? $existing['smtp']['user'] ?? '',
-            'pass' => $data['smtp_pass'] ?? $existing['smtp']['pass'] ?? '',
+            'pass' => !empty($data['smtp_pass']) ? $data['smtp_pass'] : ($existing['smtp']['pass'] ?? ''),
             'from_email' => $data['smtp_from_email'] ?? $existing['smtp']['from_email'] ?? '',
             'from_name' => $data['smtp_from_name'] ?? $existing['smtp']['from_name'] ?? ''
         ],
@@ -83,7 +83,7 @@ if ($action === 'save') {
             'port' => (int)($data['imap_port'] ?? $existing['imap']['port'] ?? 993),
             'security' => $data['imap_security'] ?? $existing['imap']['security'] ?? 'ssl',
             'user' => $data['imap_user'] ?? $existing['imap']['user'] ?? '',
-            'pass' => $data['imap_pass'] ?? $existing['imap']['pass'] ?? '',
+            'pass' => !empty($data['imap_pass']) ? $data['imap_pass'] : ($existing['imap']['pass'] ?? ''),
             'folders' => $existing['imap']['folders'] ?? ['inbox' => 'INBOX', 'sent' => 'Sent', 'drafts' => 'Drafts', 'trash' => 'Trash']
         ],
         'settings' => $existing['settings'] ?? ['per_page' => 25, 'preview_length' => 100, 'theme' => 'light']
