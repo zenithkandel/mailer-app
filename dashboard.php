@@ -478,6 +478,177 @@ $csrfToken = csrfGenerate();
             display: flex;
         }
 
+        .compose-view {
+            display: none;
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .compose-view.show {
+            display: block;
+        }
+
+        .compose-card {
+            background: var(--bg-secondary);
+            border: 3px solid var(--border-dark);
+            box-shadow: 6px 6px 0 rgba(0,0,0,0.15);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .compose-header {
+            background: var(--accent);
+            color: white;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .compose-form {
+            padding: 20px;
+        }
+
+        .compose-form .form-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .compose-form .form-group {
+            flex: 1;
+            margin-bottom: 12px;
+        }
+
+        .compose-form .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .compose-form .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 2px solid var(--border-color);
+            background: white;
+        }
+
+        .compose-form .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .compose-form .editor-container {
+            border: 2px solid var(--border-color);
+            background: white;
+            margin-bottom: 16px;
+        }
+
+        .compose-form .editor-toolbar {
+            background: var(--bg-tertiary);
+            border-bottom: 2px solid var(--border-color);
+            padding: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .compose-form .toolbar-btn {
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .compose-form .toolbar-btn:hover {
+            background: var(--bg-secondary);
+        }
+
+        .compose-form .toolbar-sep {
+            width: 1px;
+            background: var(--border-color);
+            margin: 0 6px;
+        }
+
+        .compose-form .editor-content {
+            padding: 12px;
+            min-height: 200px;
+            font-size: 14px;
+            line-height: 1.5;
+            outline: none;
+        }
+
+        .compose-form .link-input-box {
+            padding: 8px;
+            background: var(--bg-tertiary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 8px;
+        }
+
+        .compose-form .link-input-box input {
+            padding: 6px;
+            border: 1px solid var(--border-color);
+            flex: 1;
+        }
+
+        .compose-form .compose-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .settings-view {
+            display: none;
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .settings-view.show {
+            display: block;
+        }
+
+        .settings-card {
+            background: var(--bg-secondary);
+            border: 3px solid var(--border-dark);
+            box-shadow: 6px 6px 0 rgba(0,0,0,0.15);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .settings-header {
+            background: var(--accent);
+            color: white;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .settings-section {
+            padding: 16px 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .settings-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 14px;
+            text-transform: uppercase;
+        }
+
+        .settings-actions {
+            padding: 16px 20px;
+            border-top: 2px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+        }
+
         .detail-header {
             padding: 16px 20px;
             border-bottom: 2px solid var(--border-color);
@@ -981,14 +1152,69 @@ $csrfToken = csrfGenerate();
                 </div>
             </div>
 
-            <a href="compose.php" class="compose-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Compose
-            </a>
-
             <ul class="nav-menu">
+                <li class="nav-item">
+                    <a class="nav-link" data-view="compose">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        <span class="nav-label">Compose</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" data-view="inbox">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
+                            <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+                        </svg>
+                        <span class="nav-label">Inbox</span>
+                        <span class="nav-badge" id="inboxBadge" style="display: none;"></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-view="sent">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                        <span class="nav-label">Sent</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-view="drafts">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        <span class="nav-label">Drafts</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-view="starred">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        <span class="nav-label">Starred</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-view="trash">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                        <span class="nav-label">Trash</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-view="settings">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                        <span class="nav-label">Settings</span>
+                    </a>
+                </li>
+            </ul>
                 <li class="nav-item">
                     <a class="nav-link active" data-view="inbox">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1098,8 +1324,175 @@ $csrfToken = csrfGenerate();
                 </div>
             </div>
 
-            <div class="email-list-container">
+            <div class="email-list-container" id="emailListContainer">
                 <ul class="email-list" id="emailList"></ul>
+            </div>
+
+            <div class="compose-view" id="composeView" style="display: none;">
+                <div class="compose-card">
+                    <div class="compose-header">New Message</div>
+                    <div class="compose-form">
+                        <input type="hidden" id="composeCsrf" value="<?= $csrfToken ?>">
+                        <input type="hidden" id="replyToId">
+                        <input type="hidden" id="replyToEmail">
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">To</label>
+                                <input type="email" class="form-input" id="composeTo" placeholder="recipient@example.com">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">CC</label>
+                                <input type="email" class="form-input" id="composeCc">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">BCC</label>
+                                <input type="email" class="form-input" id="composeBcc">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Subject</label>
+                            <input type="text" class="form-input" id="composeSubject" placeholder="Subject">
+                        </div>
+                        <div class="editor-container">
+                            <div class="editor-toolbar">
+                                <button type="button" class="toolbar-btn" onclick="formatDoc('bold')"><b>B</b></button>
+                                <button type="button" class="toolbar-btn" onclick="formatDoc('italic')"><i>I</i></button>
+                                <button type="button" class="toolbar-btn" onclick="formatDoc('underline')"><u>U</u></button>
+                                <button type="button" class="toolbar-btn" onclick="formatDoc('strikeThrough')"><s>S</s></button>
+                                <span class="toolbar-sep"></span>
+                                <button type="button" class="toolbar-btn" onclick="formatDoc('insertOrderedList')">1.</button>
+                                <button type="button" class="toolbar-btn" onclick="formatDoc('insertUnorderedList')">&#8226;</button>
+                                <span class="toolbar-sep"></span>
+                                <button type="button" class="toolbar-btn" onclick="showLinkInput()">Link</button>
+                                <button type="button" class="toolbar-btn" onclick="formatDoc('formatBlock','h1')">H1</button>
+                                <button type="button" class="toolbar-btn" onclick="formatDoc('formatBlock','h2')">H2</button>
+                                <button type="button" class="toolbar-btn" onclick="formatDoc('formatBlock','p')">P</button>
+                            </div>
+                            <div class="editor-content" id="composeEditor" contenteditable="true"></div>
+                            <div class="link-input-box" id="linkInputBox" style="display:none;">
+                                <input type="text" id="linkUrlInput" placeholder="Enter URL">
+                                <button type="button" class="toolbar-btn" onclick="insertLink()">Add</button>
+                                <button type="button" class="toolbar-btn" onclick="hideLinkInput()">X</button>
+                            </div>
+                        </div>
+                        <div class="compose-actions">
+                            <button class="btn btn-primary" onclick="sendEmailFromCompose()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                Send
+                            </button>
+                            <button class="btn btn-secondary" onclick="saveDraftFromCompose()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg>
+                                Save Draft
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-view" id="settingsView" style="display: none;">
+                <div class="settings-card">
+                    <div class="settings-header">Settings</div>
+                    <div class="settings-section">
+                        <h4 class="settings-title">General</h4>
+                        <div class="form-group">
+                            <label class="form-label">App Name</label>
+                            <input type="text" class="form-input" id="settingsAppName" placeholder="Zenith Mail">
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h4 class="settings-title">Admin Account</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-input" id="settingsAdminUser">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Password (leave empty)</label>
+                                <input type="password" class="form-input" id="settingsAdminPass">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h4 class="settings-title">SMTP Server</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Host</label>
+                                <input type="text" class="form-input" id="settingsSmtpHost">
+                            </div>
+                            <div class="form-group" style="width:80px">
+                                <label class="form-label">Port</label>
+                                <input type="number" class="form-input" id="settingsSmtpPort">
+                            </div>
+                            <div class="form-group" style="width:100px">
+                                <label class="form-label">Security</label>
+                                <select class="form-input" id="settingsSmtpSecurity">
+                                    <option value="ssl">SSL</option>
+                                    <option value="tls">TLS</option>
+                                    <option value="">None</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-input" id="settingsSmtpUser">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Password (leave empty)</label>
+                                <input type="password" class="form-input" id="settingsSmtpPass">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">From Email</label>
+                                <input type="email" class="form-input" id="settingsSmtpFromEmail">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">From Name</label>
+                                <input type="text" class="form-input" id="settingsSmtpFromName">
+                            </div>
+                        </div>
+                        <button class="toolbar-btn" id="testSmtpBtn" onclick="testSmtpFromDashboard()">Test SMTP</button>
+                    </div>
+                    <div class="settings-section">
+                        <h4 class="settings-title">IMAP Server</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Host</label>
+                                <input type="text" class="form-input" id="settingsImapHost">
+                            </div>
+                            <div class="form-group" style="width:80px">
+                                <label class="form-label">Port</label>
+                                <input type="number" class="form-input" id="settingsImapPort">
+                            </div>
+                            <div class="form-group" style="width:100px">
+                                <label class="form-label">Security</label>
+                                <select class="form-input" id="settingsImapSecurity">
+                                    <option value="ssl">SSL</option>
+                                    <option value="tls">TLS</option>
+                                    <option value="">None</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-input" id="settingsImapUser">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Password (leave empty)</label>
+                                <input type="password" class="form-input" id="settingsImapPass">
+                            </div>
+                        </div>
+                        <button class="toolbar-btn" id="testImapBtn" onclick="testImapFromDashboard()">Test IMAP</button>
+                    </div>
+                    <div class="settings-actions">
+                        <button class="btn btn-primary" onclick="saveSettingsFromDashboard()">Save Settings</button>
+                    </div>
+                </div>
             </div>
 
             <div class="email-detail" id="emailDetail">
@@ -1137,162 +1530,6 @@ $csrfToken = csrfGenerate();
                 </div>
             </div>
         </main>
-    </div>
-
-    <div class="modal-overlay" id="composeModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h3 class="modal-title" id="composeTitle">New Message</h3>
-                <button class="modal-close" id="closeCompose">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" name="csrf_token" id="composeCsrf" value="<?= $csrfToken ?>">
-                <input type="hidden" id="replyToId">
-                <input type="hidden" id="replyToEmail">
-                <input type="hidden" id="replyToFolder">
-                
-                <div class="form-row">
-                    <span class="form-row-label">To</span>
-                    <input type="email" class="form-row-input" id="composeTo" placeholder="recipient@example.com" required>
-                </div>
-                <div class="form-row">
-                    <span class="form-row-label">Cc</span>
-                    <input type="email" class="form-row-input" id="composeCc" placeholder="">
-                </div>
-                <div class="form-row">
-                    <span class="form-row-label">Bcc</span>
-                    <input type="email" class="form-row-input" id="composeBcc" placeholder="">
-                </div>
-                <div class="form-row">
-                    <span class="form-row-label">Subject</span>
-                    <input type="text" class="form-row-input" id="composeSubject" placeholder="Subject" required>
-                </div>
-                <textarea class="compose-body" id="composeBody" placeholder="Write your message..."></textarea>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="saveDraftBtn">Save Draft</button>
-                <button class="btn btn-primary" id="sendBtn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                    </svg>
-                    Send
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="settingsModal">
-        <div class="modal settings-modal">
-            <div class="modal-header">
-                <h3 class="modal-title">Settings</h3>
-                <button class="modal-close" id="closeSettings">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="settings-section">
-                    <h4 class="settings-title">General</h4>
-                    <div class="form-group">
-                        <label class="form-label">App Name</label>
-                        <input type="text" class="form-input" id="settingsAppName" placeholder="Zenith Mail">
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <h4 class="settings-title">Admin Account</h4>
-                    <div class="form-group">
-                        <label class="form-label">Username</label>
-                        <input type="text" class="form-input" id="settingsAdminUser" placeholder="admin">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Password</label>
-                        <input type="password" class="form-input" id="settingsAdminPass" placeholder="Password">
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <h4 class="settings-title">SMTP Server</h4>
-                    <div class="form-row-group">
-                        <div class="form-group">
-                            <label class="form-label">Host</label>
-                            <input type="text" class="form-input" id="settingsSmtpHost" placeholder="mail.example.com">
-                        </div>
-                        <div class="form-group" style="width: 100px;">
-                            <label class="form-label">Port</label>
-                            <input type="number" class="form-input" id="settingsSmtpPort" placeholder="465">
-                        </div>
-                        <div class="form-group" style="width: 120px;">
-                            <label class="form-label">Security</label>
-                            <select class="form-input" id="settingsSmtpSecurity">
-                                <option value="ssl">SSL</option>
-                                <option value="tls">TLS</option>
-                                <option value="">None</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Username</label>
-                        <input type="text" class="form-input" id="settingsSmtpUser" placeholder="user@example.com">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Password</label>
-                        <input type="password" class="form-input" id="settingsSmtpPass" placeholder="Password">
-                    </div>
-                    <div class="form-row-group">
-                        <div class="form-group">
-                            <label class="form-label">From Email</label>
-                            <input type="email" class="form-input" id="settingsSmtpFromEmail" placeholder="user@example.com">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">From Name</label>
-                            <input type="text" class="form-input" id="settingsSmtpFromName" placeholder="My Name">
-                        </div>
-                    </div>
-                    <button class="toolbar-btn" id="testSmtpBtn" style="margin-top: 8px;">Test SMTP</button>
-                </div>
-
-                <div class="settings-section">
-                    <h4 class="settings-title">IMAP Server</h4>
-                    <div class="form-row-group">
-                        <div class="form-group">
-                            <label class="form-label">Host</label>
-                            <input type="text" class="form-input" id="settingsImapHost" placeholder="mail.example.com">
-                        </div>
-                        <div class="form-group" style="width: 100px;">
-                            <label class="form-label">Port</label>
-                            <input type="number" class="form-input" id="settingsImapPort" placeholder="993">
-                        </div>
-                        <div class="form-group" style="width: 120px;">
-                            <label class="form-label">Security</label>
-                            <select class="form-input" id="settingsImapSecurity">
-                                <option value="ssl">SSL</option>
-                                <option value="tls">TLS</option>
-                                <option value="">None</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Username</label>
-                        <input type="text" class="form-input" id="settingsImapUser" placeholder="user@example.com">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Password</label>
-                        <input type="password" class="form-input" id="settingsImapPass" placeholder="Password">
-                    </div>
-                    <button class="toolbar-btn" id="testImapBtn" style="margin-top: 8px;">Test IMAP</button>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancelSettingsBtn">Cancel</button>
-                <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
-            </div>
-        </div>
     </div>
 
     <div class="toast-container" id="toastContainer"></div>
@@ -1556,116 +1793,6 @@ $csrfToken = csrfGenerate();
             }
         }
 
-        function openCompose(data = {}) {
-            document.getElementById('composeModal').classList.add('show');
-            document.getElementById('composeTo').value = data.to || '';
-            document.getElementById('composeCc').value = data.cc || '';
-            document.getElementById('composeBcc').value = '';
-            document.getElementById('composeSubject').value = data.subject || '';
-            document.getElementById('composeBody').value = data.body || '';
-            document.getElementById('replyToId').value = data.reply_id || '';
-            document.getElementById('replyToEmail').value = data.reply_to || '';
-            document.getElementById('replyToFolder').value = data.folder || '';
-            
-            document.getElementById('composeTitle').textContent = data.isForward ? 'Forward' : (data.reply_id ? 'Reply' : 'New Message');
-            
-            if (data.isForward) {
-                document.getElementById('composeSubject').value = 'Fwd: ' + (data.subject || '');
-            } else if (data.reply_id) {
-                document.getElementById('composeSubject').value = 'Re: ' + (data.subject || '');
-            }
-            
-            document.getElementById('composeTo').focus();
-        }
-
-        function closeCompose() {
-            document.getElementById('composeModal').classList.remove('show');
-        }
-
-        async function sendEmail() {
-            const to = document.getElementById('composeTo').value.trim();
-            const cc = document.getElementById('composeCc').value.trim();
-            const bcc = document.getElementById('composeBcc').value.trim();
-            const subject = document.getElementById('composeSubject').value.trim();
-            const body = document.getElementById('composeBody').value;
-            const replyTo = document.getElementById('replyToEmail').value;
-            const replyId = document.getElementById('replyToId').value;
-
-            if (!to) {
-                showToast('Please enter a recipient', 'error');
-                return;
-            }
-            if (!subject) {
-                showToast('Please enter a subject', 'error');
-                return;
-            }
-
-            const btn = document.getElementById('sendBtn');
-            btn.disabled = true;
-            btn.textContent = 'Sending...';
-
-            try {
-                const res = await fetch('api/mail.php?action=send', {
-                    method: 'POST',
-                    headers: { ...csrfHeaders(), 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        csrf_token: CSRF_TOKEN,
-                        to, cc, bcc, subject, body,
-                        reply_to: replyTo,
-                        reply_id: replyId,
-                        folder: state.currentView
-                    })
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    showToast('Email sent successfully!', 'success');
-                    closeCompose();
-                    if (state.currentView === 'sent' || state.currentView === 'inbox') {
-                        loadEmails(true);
-                    }
-                } else {
-                    throw new Error(data.error);
-                }
-            } catch (err) {
-                showToast(err.message, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send`;
-            }
-        }
-
-        async function saveDraft() {
-            const to = document.getElementById('composeTo').value.trim();
-            const cc = document.getElementById('composeCc').value.trim();
-            const bcc = document.getElementById('composeBcc').value.trim();
-            const subject = document.getElementById('composeSubject').value.trim();
-            const body = document.getElementById('composeBody').value;
-
-            if (!to && !subject && !body) {
-                showToast('Nothing to save', 'info');
-                return;
-            }
-
-            try {
-                const res = await fetch('api/mail.php?action=draft', {
-                    method: 'POST',
-                    headers: { ...csrfHeaders(), 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ csrf_token: CSRF_TOKEN, to, cc, bcc, subject, body })
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    showToast('Draft saved', 'success');
-                    closeCompose();
-                } else {
-                    throw new Error(data.error);
-                }
-            } catch (err) {
-                showToast(err.message, 'error');
-            }
-        }
-
         async function deleteSelected() {
             const ids = Array.from(state.selectedIds);
             if (ids.length === 0) return;
@@ -1729,30 +1856,24 @@ $csrfToken = csrfGenerate();
             }
         }
 
-        document.getElementById('composeBtn').addEventListener('click', () => openCompose());
-        document.getElementById('closeCompose').addEventListener('click', closeCompose);
-        document.getElementById('sendBtn').addEventListener('click', sendEmail);
-        document.getElementById('saveDraftBtn').addEventListener('click', saveDraft);
-
         document.getElementById('replyBtn').addEventListener('click', () => {
             if (state.currentEmail) {
-                openCompose({
-                    reply_id: state.currentEmail.id,
+                const params = new URLSearchParams({
                     reply_to: state.currentEmail.reply_to || state.currentEmail.from,
-                    to: state.currentEmail.reply_to || state.currentEmail.from,
                     subject: state.currentEmail.subject,
-                    folder: state.currentView
+                    id: state.currentEmail.id
                 });
+                window.location.href = 'compose.php?' + params;
             }
         });
 
         document.getElementById('forwardBtn').addEventListener('click', () => {
             if (state.currentEmail) {
-                openCompose({
-                    isForward: true,
-                    subject: state.currentEmail.subject,
-                    body: state.currentEmail.body
+                const params = new URLSearchParams({
+                    forward: '1',
+                    subject: state.currentEmail.subject
                 });
+                window.location.href = 'compose.php?' + params;
             }
         });
 
@@ -1805,53 +1926,124 @@ $csrfToken = csrfGenerate();
         document.getElementById('markReadBtn').addEventListener('click', markAsRead);
         document.getElementById('markUnreadBtn').addEventListener('click', markAsUnread);
 
-        // Settings
-        document.getElementById('openSettings').addEventListener('click', openSettings);
-        document.getElementById('closeSettings').addEventListener('click', closeSettings);
-        document.getElementById('cancelSettingsBtn').addEventListener('click', closeSettings);
-        document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
-        document.getElementById('testSmtpBtn').addEventListener('click', testSmtp);
-        document.getElementById('testImapBtn').addEventListener('click', testImap);
+        function showView(view) {
+            document.getElementById('emailListContainer').style.display = 'none';
+            document.getElementById('emailDetail').classList.remove('show');
+            document.getElementById('composeView').classList.remove('show');
+            document.getElementById('settingsView').classList.remove('show');
 
-        async function openSettings() {
+            if (view === 'compose') {
+                document.getElementById('composeView').classList.add('show');
+                document.getElementById('composeTo').value = '';
+                document.getElementById('composeCc').value = '';
+                document.getElementById('composeBcc').value = '';
+                document.getElementById('composeSubject').value = '';
+                document.getElementById('composeEditor').innerHTML = '';
+                document.getElementById('composeTo').focus();
+            } else if (view === 'settings') {
+                document.getElementById('settingsView').classList.add('show');
+                loadSettingsIntoForm();
+            } else {
+                document.getElementById('emailListContainer').style.display = 'block';
+                loadEmails(true);
+            }
+        }
+
+        function formatDoc(cmd, val) {
+            document.execCommand(cmd, false, val);
+            document.getElementById('composeEditor').focus();
+        }
+
+        function showLinkInput() {
+            document.getElementById('linkInputBox').style.display = 'flex';
+            document.getElementById('linkUrlInput').focus();
+        }
+
+        function hideLinkInput() {
+            document.getElementById('linkInputBox').style.display = 'none';
+            document.getElementById('linkUrlInput').value = '';
+        }
+
+        function insertLink() {
+            const url = document.getElementById('linkUrlInput').value;
+            if (url) {
+                formatDoc('createLink', url);
+            }
+            hideLinkInput();
+        }
+
+        async function sendEmailFromCompose() {
+            const to = document.getElementById('composeTo').value.trim();
+            const cc = document.getElementById('composeCc').value.trim();
+            const bcc = document.getElementById('composeBcc').value.trim();
+            const subject = document.getElementById('composeSubject').value.trim();
+            const body = document.getElementById('composeEditor').innerHTML;
+
+            if (!to) { showToast('Please enter a recipient', 'error'); return; }
+            if (!subject) { showToast('Please enter a subject', 'error'); return; }
+
+            try {
+                const res = await fetch('api/mail.php?action=send', {
+                    method: 'POST',
+                    headers: { ...csrfHeaders(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ csrf_token: CSRF_TOKEN, to, cc, bcc, subject, body })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Email sent!', 'success');
+                    showView('inbox');
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function saveDraftFromCompose() {
+            const to = document.getElementById('composeTo').value.trim();
+            const cc = document.getElementById('composeCc').value.trim();
+            const bcc = document.getElementById('composeBcc').value.trim();
+            const subject = document.getElementById('composeSubject').value.trim();
+            const body = document.getElementById('composeEditor').innerHTML;
+
+            try {
+                const res = await fetch('api/mail.php?action=draft', {
+                    method: 'POST',
+                    headers: { ...csrfHeaders(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ csrf_token: CSRF_TOKEN, to, cc, bcc, subject, body })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Draft saved', 'success');
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function loadSettingsIntoForm() {
             try {
                 const res = await fetch('api/settings.php?action=get', { headers: csrfHeaders() });
                 const data = await res.json();
-                
-                if (data.error) {
-                    showToast(data.error, 'error');
-                    return;
-                }
-                
+                if (data.error) return;
+
                 document.getElementById('settingsAppName').value = data.app_name || '';
                 document.getElementById('settingsAdminUser').value = data.admin_user || '';
-                document.getElementById('settingsAdminPass').value = '';
-                
                 document.getElementById('settingsSmtpHost').value = data.smtp?.host || '';
                 document.getElementById('settingsSmtpPort').value = data.smtp?.port || 465;
                 document.getElementById('settingsSmtpSecurity').value = data.smtp?.security || 'ssl';
                 document.getElementById('settingsSmtpUser').value = data.smtp?.user || '';
-                document.getElementById('settingsSmtpPass').value = '';
                 document.getElementById('settingsSmtpFromEmail').value = data.smtp?.from_email || '';
                 document.getElementById('settingsSmtpFromName').value = data.smtp?.from_name || '';
-                
                 document.getElementById('settingsImapHost').value = data.imap?.host || '';
                 document.getElementById('settingsImapPort').value = data.imap?.port || 993;
                 document.getElementById('settingsImapSecurity').value = data.imap?.security || 'ssl';
                 document.getElementById('settingsImapUser').value = data.imap?.user || '';
-                document.getElementById('settingsImapPass').value = '';
-                
-                document.getElementById('settingsModal').classList.add('show');
-            } catch (err) {
-                showToast('Failed to load settings', 'error');
-            }
+            } catch (err) { showToast('Failed to load settings', 'error'); }
         }
 
-        function closeSettings() {
-            document.getElementById('settingsModal').classList.remove('show');
-        }
-
-        async function saveSettings() {
+        async function saveSettingsFromDashboard() {
             const data = {
                 csrf_token: CSRF_TOKEN,
                 app_name: document.getElementById('settingsAppName').value,
@@ -1871,10 +2063,6 @@ $csrfToken = csrfGenerate();
                 imap_pass: document.getElementById('settingsImapPass').value
             };
 
-            const btn = document.getElementById('saveSettingsBtn');
-            btn.disabled = true;
-            btn.textContent = 'Saving...';
-
             try {
                 const res = await fetch('api/settings.php?action=save', {
                     method: 'POST',
@@ -1882,75 +2070,46 @@ $csrfToken = csrfGenerate();
                     body: JSON.stringify(data)
                 });
                 const result = await res.json();
-                
                 if (result.success) {
-                    showToast('Settings saved successfully!', 'success');
-                    closeSettings();
+                    showToast('Settings saved!', 'success');
                 } else {
                     throw new Error(result.error);
                 }
             } catch (err) {
                 showToast(err.message, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Save Settings';
             }
         }
 
-        async function testSmtp() {
+        async function testSmtpFromDashboard() {
             const btn = document.getElementById('testSmtpBtn');
-            btn.disabled = true;
-            btn.textContent = 'Testing...';
-            
+            btn.disabled = true; btn.textContent = 'Testing...';
             try {
                 const host = document.getElementById('settingsSmtpHost').value;
                 const port = document.getElementById('settingsSmtpPort').value;
                 const security = document.getElementById('settingsSmtpSecurity').value;
                 const user = document.getElementById('settingsSmtpUser').value;
                 const pass = document.getElementById('settingsSmtpPass').value;
-                
-                const res = await fetch(`api/settings.php?action=test_smtp&host=${encodeURIComponent(host)}&port=${port}&security=${encodeURIComponent(security)}&user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`, { headers: csrfHeaders() });
+                const res = await fetch(`api/settings.php?action=test_smtp&host=${encodeURIComponent(host)}&port=${port}&security=${encodeURIComponent(security)}&user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`, { headers: { 'X-CSRF-TOKEN': CSRF_TOKEN } });
                 const data = await res.json();
-                
-                if (data.success) {
-                    showToast('SMTP connection successful!', 'success');
-                } else {
-                    showToast('SMTP failed: ' + data.error, 'error');
-                }
-            } catch (err) {
-                showToast('SMTP test failed', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Test SMTP';
-            }
+                showToast(data.success ? 'SMTP OK!' : 'SMTP failed: ' + data.error, data.success ? 'success' : 'error');
+            } catch (err) { showToast('Test failed', 'error'); }
+            btn.disabled = false; btn.textContent = 'Test SMTP';
         }
 
-        async function testImap() {
+        async function testImapFromDashboard() {
             const btn = document.getElementById('testImapBtn');
-            btn.disabled = true;
-            btn.textContent = 'Testing...';
-            
+            btn.disabled = true; btn.textContent = 'Testing...';
             try {
                 const host = document.getElementById('settingsImapHost').value;
                 const port = document.getElementById('settingsImapPort').value;
                 const security = document.getElementById('settingsImapSecurity').value;
                 const user = document.getElementById('settingsImapUser').value;
                 const pass = document.getElementById('settingsImapPass').value;
-                
-                const res = await fetch(`api/settings.php?action=test_imap&host=${encodeURIComponent(host)}&port=${port}&security=${encodeURIComponent(security)}&user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`, { headers: csrfHeaders() });
+                const res = await fetch(`api/settings.php?action=test_imap&host=${encodeURIComponent(host)}&port=${port}&security=${encodeURIComponent(security)}&user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`, { headers: { 'X-CSRF-TOKEN': CSRF_TOKEN } });
                 const data = await res.json();
-                
-                if (data.success) {
-                    showToast('IMAP connection successful!', 'success');
-                } else {
-                    showToast('IMAP failed: ' + data.error, 'error');
-                }
-            } catch (err) {
-                showToast('IMAP test failed', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Test IMAP';
-            }
+                showToast(data.success ? 'IMAP OK!' : 'IMAP failed: ' + data.error, data.success ? 'success' : 'error');
+            } catch (err) { showToast('Test failed', 'error'); }
+            btn.disabled = false; btn.textContent = 'Test IMAP';
         }
 
         loadEmails(true);
