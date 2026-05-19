@@ -376,6 +376,47 @@
             return;
         }
 
+        if (view === 'compose') {
+            container.innerHTML = `
+                <div class="compose-page">
+                    <div class="compose-header">
+                        <h1 class="compose-title">New Message</h1>
+                    </div>
+                    <div class="compose-card">
+                        <div class="compose-form-wrap">
+                            <div class="compose-field">
+                                <div class="compose-field-label">To</div>
+                                <input type="email" class="compose-field-input" id="composeTo" placeholder="recipient@example.com">
+                            </div>
+                            <div class="compose-field" style="border-bottom: none;">
+                                <div class="compose-field-label">Subject</div>
+                                <input type="text" class="compose-field-input" id="composeSubject" placeholder="Subject">
+                            </div>
+                            <div class="compose-editor-wrap">
+                                <div id="composeEditor"></div>
+                            </div>
+                        </div>
+                        <div class="compose-actions">
+                            <div class="compose-actions-left">
+                                <button class="btn btn-primary" id="composeSendBtn" onclick="window.app.sendEmail()">
+                                    <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                    Send
+                                </button>
+                                <button class="btn btn-secondary" onclick="window.app.saveDraft()">
+                                    <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg>
+                                    Save Draft
+                                </button>
+                            </div>
+                            <div class="compose-actions-right">
+                                <button class="btn btn-ghost" style="color:var(--text-muted)" onclick="window.app.navigateTo('inbox')">Discard</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            initQuillEditor();
+            return;
+        }
+
         container.innerHTML = `
             <div class="view-wrap">
                 <div class="page-header">
@@ -390,7 +431,6 @@
                 </div>
                 <div class="email-list-wrap">
                     <div class="email-list" id="emailList"></div>
-                    <div id="emailDetail"></div>
                     <div class="load-more-wrap hidden" id="loadMoreWrap">
                         <button class="load-more-btn" onclick="window.app.loadMore()">Load More</button>
                     </div>
@@ -398,6 +438,32 @@
             </div>`;
 
         loadEmails();
+    }
+
+    let quillEditor = null;
+
+    function initQuillEditor() {
+        if (typeof Quill === 'undefined') {
+            setTimeout(initQuillEditor, 200);
+            return;
+        }
+        if (quillEditor) {
+            quillEditor = null;
+        }
+        quillEditor = new Quill('#composeEditor', {
+            theme: 'snow',
+            placeholder: 'Write your message...',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'header': 1 }, { 'header': 2 }],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    [{ 'align': [] }],
+                    ['link'],
+                    ['clean']
+                ]
+            }
+        });
     }
 
     async function loadSettingsData() {
