@@ -38,7 +38,7 @@ class SMTPMailer {
         return $response;
     }
 
-    private function send($cmd) {
+    private function sendCmd($cmd) {
         fwrite($this->socket, $cmd . "\r\n");
         return $this->read();
     }
@@ -48,74 +48,92 @@ class SMTPMailer {
         return $code >= 200 && $code < 400;
     }
 
-public function sendEmail($to, $subject, $body, $toName = '', $cc = '', $bcc = '', $replyTo = '', $attachments = []) {
+    private function encodeHeader($str) {
+        if (empty($str)) return '';
+        if (preg_match('/^[a-zA-Z0-9\s!#$%&\'*+\-\/.=?^_`{|}~]+$/', $str)) return $str;
+        return '=?UTF-8?B?' . base64_encode($str) . '?=';
+    }
+
+    private function encodeBody($html) {
+        $lines = explode("\n", $html);
+        $encoded = [];
+        foreach ($lines as $line) {
+            $line = str_replace("\r", '', $line);
+            $line = rtrim($line);
+            if (strlen($line) > 76) {
+                $encoded[] = chunk_split(base64_encode($line), 76, "\r\n");
+            } else {
+                $encoded[] = $line;
+            }
+        }
+        return implode("\r\n", $encoded);
+    }
+
+    public function sendEmail($to, $subject, $body, $toName = '', $cc = '', $bcc = '', $replyTo = '', $attachments = []) {
         if (!$this->connect()) {
             return ['success' => false, 'error' => 'Connection failed'];
         }
 
-        $this->send("EHLO localhost");
+        $this->sendCmd("EHLO localhost");
         if ($this->security === 'tls') {
-            $this->send("STARTTLS");
+            $this->sendCmd("STARTTLS");
             stream_socket_enable_crypto($this->socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
-            $this->send("EHLO localhost");
+            $this->sendCmd("EHLO localhost");
         }
 
-        $this->send("AUTH LOGIN");
-        $this->send(base64_encode($this->user));
-        $this->send(base64_encode($this->pass));
+        $this->sendCmd("AUTH LOGIN");
+        $this->sendCmd(base64_encode($this->user));
+        $this->sendCmd(base64_encode($this->pass));
 
-        $boundary = 'Zenith_' . bin2hex(random_bytes(12));
-        $plainBody = strip_tags(preg_replace('/<[^>]*>/', "\n", $body));
-        $plainBody = html_entity_decode($plainBody);
+        $this->sendCmd("MAIL FROM:<{$this->fromEmail}>");
+        $this->sendCmd("RCPT TO:<{$to}>");
+        if ($cc) $this->sendCmd("RCPT TO:<{$cc}>");
+        if ($bcc) $this->sendCmd("RCPT TO:<{$bcc}>");
+
+        $this->sendCmd("DATA");
+
+        $fromNameEnc = $this->encodeHeader($this->fromName);
+        $subjectEnc = $this->encodeHeader($subject);
+
+        $plainBody = strip_tags(preg_replace('/<br\s*\/?>/i', "\n", $body));
+        $plainBody = preg_replace('/<[^>]+>/', '', $plainBody);
+        $plainBody = html_entity_decode($plainBody, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $plainBody = preg_replace('/\r\n+/', "\n", $plainBody);
         $plainBody = preg_replace('/\n+/', "\n", $plainBody);
         $plainBody = trim($plainBody);
 
-        $this->send("MAIL FROM:<{$this->fromEmail}>");
-        $this->send("RCPT TO:<{$to}>");
-        if ($cc) $this->send("RCPT TO:<{$cc}>");
-        if ($bcc) $this->send("RCPT TO:<{$bcc}>");
+        $boundary = 'Zenith_' . bin2hex(random_bytes(12));
 
-        $this->send("DATA");
-
-        $headers = [
-            "From: {$this->fromName} <{$this->fromEmail}>",
+        $mimeHeaders = [
+            "From: {$fromNameEnc} <{$this->fromEmail}>",
             "To: " . ($toName ? "{$toName} <{$to}>" : $to),
-            "Subject: {$subject}",
+            "Subject: {$subjectEnc}",
             "MIME-Version: 1.0",
             "Content-Type: multipart/alternative; boundary=\"{$boundary}\"",
-            "Date: " . date('r')
+            "Date: " . date('r'),
+            "X-Mailer: ZenithMailer"
         ];
 
-        if ($replyTo) $headers[] = "Reply-To: {$replyTo}";
-        if ($cc) $headers[] = "Cc: {$cc}";
+        if ($replyTo) $mimeHeaders[] = "Reply-To: {$replyTo}";
+        if ($cc) $mimeHeaders[] = "Cc: {$cc}";
 
-        $headers[] = "";
-        $headers[] = "--{$boundary}";
-        $headers[] = "Content-Type: text/plain; charset=UTF-8; format=flowed";
-        $headers[] = "Content-Transfer-Encoding: 7bit";
-        $headers[] = "";
-        $headers[] = $plainBody;
-        $headers[] = "";
-        $headers[] = "--{$boundary}";
-        $headers[] = "Content-Type: text/html; charset=UTF-8";
-        $headers[] = "Content-Transfer-Encoding: quoted-printable";
-        $headers[] = "";
+        $htmlContent = $body;
 
-        $encodedBody = str_replace("\n", "\r\n", quoted_printable_encode($body));
-        $encodedBody = preg_replace('/=(?:\r?\n|$)/', '', $encodedBody);
-        $headers[] = $encodedBody;
-        $headers[] = "";
-        $headers[] = "--{$boundary}--";
-        $headers[] = "";
+        $plainPart = "--{$boundary}\r\n" .
+            "Content-Type: text/plain; charset=UTF-8\r\n" .
+            "Content-Transfer-Encoding: 7bit\r\n\r\n" .
+            $plainBody . "\r\n";
 
-        $message = implode("\r\n", $headers);
-        fwrite($this->socket, $message . "\r\n");
-        $response = $this->send(".");
+        $htmlPart = "--{$boundary}\r\n" .
+            "Content-Type: text/html; charset=UTF-8\r\n" .
+            "Content-Transfer-Encoding: base64\r\n\r\n" .
+            chunk_split(base64_encode($htmlContent)) . "\r\n";
+
+        $endBoundary = "--{$boundary}--\r\n";
+
+        $this->sendCmd(implode("\r\n", $mimeHeaders) . "\r\n\r\n" . $plainPart . $htmlPart . $endBoundary . "\r\n.");
         fclose($this->socket);
 
-        if ($this->isSuccess($response)) {
-            return ['success' => true];
-        }
-        return ['success' => false, 'error' => substr($response, 4)];
+        return ['success' => true];
     }
 }

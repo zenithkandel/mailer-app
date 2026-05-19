@@ -836,12 +836,37 @@
                 if (e.ctrlKey && e.key === 'Enter') window.app.sendReply();
             });
 
+            const backdrop = $('#sidebarBackdrop');
+            if (backdrop) {
+                backdrop.addEventListener('click', () => window.app.closeSidebar());
+            }
+
             window.addEventListener('popstate', () => {
                 const params = new URLSearchParams(window.location.search);
                 const view = params.get('view') || 'inbox';
                 C.currentView = view;
                 renderMainContent();
             });
+        },
+
+        toggleSidebar: function() {
+            const sidebar = $('#sidebar');
+            const backdrop = $('#sidebarBackdrop');
+            if (!sidebar) return;
+            sidebar.classList.toggle('mobile-open');
+            if (backdrop) backdrop.classList.toggle('show');
+        },
+
+        closeSidebar: function() {
+            const sidebar = $('#sidebar');
+            const backdrop = $('#sidebarBackdrop');
+            if (sidebar) sidebar.classList.remove('mobile-open');
+            if (backdrop) backdrop.classList.remove('show');
+        },
+
+toggleMobileMenu: function() {
+            const menu = $('#mobMoreDropdown');
+            if (menu) menu.classList.toggle('show');
         }
     };
 

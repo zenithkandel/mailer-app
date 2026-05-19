@@ -423,6 +423,8 @@ html { height: 100%; }
     flex-shrink: 0;
 }
 
+
+
 #viewContainer {
     flex: 1;
     overflow-y: auto;
@@ -1018,12 +1020,25 @@ html { height: 100%; }
 /* ===== TOAST ===== */
 .toast-container {
     position: fixed;
-    bottom: 24px;
-    right: 24px;
+    bottom: 80px;
+    right: 16px;
+    left: 16px;
     z-index: 200;
     display: flex;
     flex-direction: column;
     gap: 8px;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+@media (min-width: 769px) {
+    .toast-container {
+        bottom: 24px;
+        left: auto;
+        right: 24px;
+        max-width: 400px;
+        margin: 0;
+    }
 }
 
 .toast {
@@ -1308,23 +1323,132 @@ select.form-control { cursor: pointer; }
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
     :root { --sidebar-w: 0px; }
-    .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; width: 240px !important; }
-    .sidebar.mobile-open { transform: translateX(0); }
+    .sidebar { display: none; }
     .main-content { margin-left: 0 !important; }
+    .main-content { padding-bottom: 70px; }
     .topbar { padding: 0 16px; }
     .topbar-search { max-width: none; }
-    .page-header { padding: 16px 16px 0; }
+    .page-header { padding: 12px 16px 0; }
     .email-list-wrap { padding: 8px 16px 80px; }
-    .email-sender { min-width: 120px; }
-    .modal { max-width: 100%; border-radius: var(--radius-lg); }
+    .settings-page { padding: 16px; }
+    .compose-page { padding: 16px; }
     .settings-grid { grid-template-columns: 1fr; }
+    .mobile-bottom-nav { display: flex !important; }
 }
 
 @media (max-width: 480px) {
     .email-preview { display: none; }
-    .email-sender { min-width: 100px; }
     .page-actions { gap: 4px; }
     .icon-btn { width: 30px; height: 30px; }
+    .compose-field-label { width: 55px; padding: 10px 12px; }
+}
+
+/* ===== MOBILE BOTTOM NAV ===== */
+.mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border);
+    z-index: 40;
+    padding: 0 4px;
+    align-items: center;
+    justify-content: space-around;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
+}
+
+.mob-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 12px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    transition: color 0.15s;
+    min-width: 56px;
+    position: relative;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+}
+
+.mob-nav-item svg {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.5;
+}
+
+.mob-nav-item.active {
+    color: var(--accent);
+}
+
+.mob-nav-item.mob-compose {
+    color: white;
+    background: var(--accent);
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    margin-top: -16px;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+    padding: 0;
+    min-width: 48px;
+}
+
+.mob-nav-item.mob-compose svg {
+    stroke: currentColor;
+}
+
+.mob-nav-item.mob-compose.active {
+    background: var(--accent-hover);
+    color: white;
+}
+
+.mob-nav-item.mob-more { position: relative; }
+
+.mob-more-dropdown {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    padding: 6px;
+    margin-bottom: 8px;
+    min-width: 140px;
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mob-more-dropdown.show { display: flex; }
+
+.mob-dropdown-item {
+    display: block;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: var(--radius-xs);
+    white-space: nowrap;
+}
+
+.mob-dropdown-item:hover,
+.mob-dropdown-item.active {
+    background: var(--accent-light);
+    color: var(--accent);
 }
 
 /* ===== SELECT ALL CHECKBOX ===== */

@@ -37,7 +37,7 @@ $initial = strtoupper(substr($username, 0, 1));
 <body>
 
 <div class="app-layout">
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="brand">
                 <div class="brand-icon">
@@ -140,6 +140,44 @@ $initial = strtoupper(substr($username, 0, 1));
         </div>
 
         <div id="viewContainer"></div>
+    </div>
+</div>
+
+<div class="mobile-bottom-nav" id="mobileBottomNav">
+    <a href="?view=inbox" class="mob-nav-item<?= $view == 'inbox' ? ' active' : '' ?>" onclick="return window.app.navigateTo('inbox')">
+        <svg viewBox="0 0 24 24">
+            <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
+            <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+        </svg>
+        <span class="mob-nav-label">Inbox</span>
+    </a>
+    <a href="?view=compose" class="mob-nav-item mob-compose<?= $view == 'compose' ? ' active' : '' ?>" onclick="return window.app.navigateTo('compose')">
+        <svg viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        <span class="mob-nav-label">Compose</span>
+    </a>
+    <a href="?view=sent" class="mob-nav-item<?= $view == 'sent' ? ' active' : '' ?>" onclick="return window.app.navigateTo('sent')">
+        <svg viewBox="0 0 24 24">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+        <span class="mob-nav-label">Sent</span>
+    </a>
+    <div class="mob-nav-item mob-more" id="mobMoreBtn" onclick="window.app.toggleMobileMenu()">
+        <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="5" r="1.5"/>
+            <circle cx="12" cy="12" r="1.5"/>
+            <circle cx="12" cy="19" r="1.5"/>
+        </svg>
+        <span class="mob-nav-label">More</span>
+        <div class="mob-more-dropdown hidden" id="mobMoreDropdown">
+            <a href="?view=drafts" class="mob-dropdown-item<?= $view == 'drafts' ? ' active' : '' ?>" onclick="return window.app.navigateTo('drafts')">Drafts</a>
+            <a href="?view=starred" class="mob-dropdown-item<?= $view == 'starred' ? ' active' : '' ?>" onclick="return window.app.navigateTo('starred')">Starred</a>
+            <a href="?view=trash" class="mob-dropdown-item<?= $view == 'trash' ? ' active' : '' ?>" onclick="return window.app.navigateTo('trash')">Trash</a>
+            <a href="?view=settings" class="mob-dropdown-item<?= $view == 'settings' ? ' active' : '' ?>" onclick="return window.app.navigateTo('settings')">Settings</a>
+        </div>
     </div>
 </div>
 

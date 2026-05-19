@@ -9,7 +9,7 @@
         "user": "admin@zenithkandel.com.np",
         "pass": "8038@Zenith",
         "from_email": "admin@zenithkandel.com.np",
-        "from_name": "Test Name Zenith lll"
+        "from_name": "Zenith Kandel"
     },
     "imap": {
         "host": "mail.zenithkandel.com.np",
@@ -21,8 +21,8 @@
             "inbox": "INBOX",
             "sent": "Sent",
             "drafts": "Drafts",
-            "starred": "Starred",
-            "trash": "Trash"
+            "trash": "Trash",
+            "starred": "Starred"
         }
     },
     "settings": {
