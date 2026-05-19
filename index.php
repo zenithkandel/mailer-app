@@ -12,19 +12,24 @@ $csrfToken = csrfGenerate();
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — <?= sanitize($appName) ?></title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
+
 <body>
     <div class="login-page">
         <div class="login-container">
             <div class="login-card">
                 <div class="login-logo">
                     <div class="login-logo-icon">
-                        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                            <polyline points="22,6 12,13 2,6" />
+                        </svg>
                     </div>
                 </div>
                 <h1 class="login-title"><?= sanitize($appName) ?></h1>
@@ -36,16 +41,18 @@ $csrfToken = csrfGenerate();
                     <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                     <div class="form-group">
                         <label for="username">Username</label>
-                        <input type="text" id="username" name="username" placeholder="Enter your username" required autocomplete="username">
+                        <input type="text" id="username" name="username" placeholder="Enter your username" required
+                            autocomplete="username">
                     </div>
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required
+                            autocomplete="current-password">
                     </div>
                     <button type="submit" class="login-btn" id="loginBtn">Sign In</button>
                 </form>
 
-        <div class="login-footer"><?= sanitize($appName) ?> &mdash; Mail Client</div>
+                <div class="login-footer"><?= sanitize($appName) ?> &mdash; Mail Client</div>
             </div>
         </div>
     </div>
@@ -89,4 +96,5 @@ $csrfToken = csrfGenerate();
         });
     </script>
 </body>
+
 </html>
