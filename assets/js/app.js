@@ -176,6 +176,8 @@
         const initials = getInitials(sender);
         const isInbox = view === 'inbox';
 
+        viewStack.push({ emails: [...emails], selected: selectedEmail, searchQuery: C.searchQuery, page: C.page });
+
         detailEl.innerHTML = `
             <div class="email-detail">
                 <div class="email-detail-header">
@@ -226,7 +228,7 @@
                 </div>
             </div>`;
 
-        detailEl.classList.add('open');
+        detailEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         if (isInbox && email.unread) {
             fetch(`api/mail.php?action=mark`, {
@@ -596,9 +598,10 @@
 
             toast('Email deleted', 'success');
             emails = emails.filter(e => e.id != id);
-            if (selectedEmail?.id == id) selectedEmail = null;
-            const detailEl = $('#emailDetail');
-            if (detailEl) detailEl.classList.remove('open');
+            if (selectedEmail?.id == id) {
+                selectedEmail = null;
+                window.app.closeEmail(true);
+            }
             renderEmailList();
             renderEmptyOrList();
         } catch (err) {
@@ -675,6 +678,7 @@
             C.searchQuery = '';
             emails = [];
             selectedEmail = null;
+            viewStack = [];
             const url = new URL(window.location.href);
             url.searchParams.set('view', view);
             window.history.pushState({}, '', url);
@@ -690,6 +694,7 @@
             C.hasMore = true;
             emails = [];
             selectedEmail = null;
+            viewStack = [];
             loadEmails(true);
         },
 
@@ -700,11 +705,30 @@
 
         viewEmail: viewEmail,
 
-        closeEmail: function() {
-            const detailEl = $('#emailDetail');
-            if (detailEl) detailEl.classList.remove('open');
-            $$('.email-item').forEach(el => el.classList.remove('selected'));
-            selectedEmail = null;
+        closeEmail: function(restoreStack = false) {
+            if (restoreStack && viewStack.length > 0) {
+                const prev = viewStack.pop();
+                emails = prev.emails;
+                selectedEmail = prev.selected;
+                C.searchQuery = prev.searchQuery;
+                C.page = prev.page;
+                $$('.email-item').forEach(el => el.classList.remove('selected'));
+                if (selectedEmail) {
+                    const el = $(`[data-id="${selectedEmail.id}"]`);
+                    if (el) el.classList.add('selected');
+                }
+                renderEmailList();
+                renderEmptyOrList();
+                const detailEl = $('#emailDetail');
+                if (detailEl) detailEl.innerHTML = '';
+                const searchInput = $('#searchInput');
+                if (searchInput) searchInput.value = C.searchQuery;
+            } else {
+                const detailEl = $('#emailDetail');
+                if (detailEl) detailEl.innerHTML = '';
+                $$('.email-item').forEach(el => el.classList.remove('selected'));
+                selectedEmail = null;
+            }
         },
 
         openCompose: openCompose,
