@@ -309,8 +309,9 @@ html { height: 100%; }
 }
 
 .nav-link.active {
-    background: var(--bg-sidebar-active);
+    background: var(--accent);
     color: white;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
 }
 
 .nav-link svg {
